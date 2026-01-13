@@ -18,32 +18,48 @@ const poolPromise = new sql.ConnectionPool({
   options: { encrypt: false, trustServerCertificate: true },
 }).connect();
 
+const toFloat = (v) => {
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+const toDate = (v) => {
+  if (v == null || v === '') return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+const fitString = (v, maxLen) => {
+  if (v == null || v === '') return null;
+  const s = String(v);
+  return maxLen ? s.slice(0, maxLen) : s;
+};
+
 async function upsertToMSSQL(items) {
   if (!items.length) return 0;
   const pool = await poolPromise;
 
   const table = new sql.Table('Projekt');
-  table.columns.add('ProjNr', sql.NVarChar(50), { nullable: false });
-  table.columns.add('ProjBezeichnung', sql.NVarChar(255), { nullable: true });
-  table.columns.add('ProjAdr', sql.Int, { nullable: true });
-  table.columns.add('RechAdr', sql.Int, { nullable: true });
-  table.columns.add('BauHrAdr', sql.Int, { nullable: true });
-  table.columns.add('AbtNr', sql.Int, { nullable: true });
-  table.columns.add('SachBearb', sql.NVarChar(50), { nullable: true });
-  table.columns.add('AuftragsSumme', sql.Numeric(18, 2), { nullable: true });
-  table.columns.add('Beginn', sql.DateTimeOffset, { nullable: true });
+  table.columns.add('ProjNr', sql.NVarChar(15), { nullable: false });
+  table.columns.add('ProjBezeichnung', sql.NVarChar(sql.MAX), { nullable: true });
+  table.columns.add('ProjAdr', sql.NVarChar(24), { nullable: true });
+  table.columns.add('RechAdr', sql.NVarChar(24), { nullable: true });
+  table.columns.add('BauHrAdr', sql.NVarChar(24), { nullable: true });
+  table.columns.add('AbtNr', sql.Float, { nullable: true });
+  table.columns.add('SachBearb', sql.NVarChar(20), { nullable: true });
+  table.columns.add('AuftragsSumme', sql.Float, { nullable: true });
+  table.columns.add('Beginn', sql.DateTime, { nullable: true });
 
   for (const r of items) {
     table.rows.add(
-      r.projnr,
+      fitString(r.projnr, 15),
       r.projbezeichnung ?? null,
-      r.projadr ?? null,
-      r.rechadr ?? null,
-      r.bauhradr ?? null,
-      r.abtnr ?? null,
-      r.sachbearb ?? null,
-      r.auftragssumme ?? null,
-      r.beginn ? new Date(r.beginn) : null
+      fitString(r.projadr, 24),
+      fitString(r.rechadr, 24),
+      fitString(r.bauhradr, 24),
+      toFloat(r.abtnr),
+      fitString(r.sachbearb, 20),
+      toFloat(r.auftragssumme),
+      toDate(r.beginn)
     );
   }
 
@@ -51,15 +67,15 @@ async function upsertToMSSQL(items) {
   await pool.request().batch(`
     IF OBJECT_ID('tempdb..${tmp}') IS NOT NULL DROP TABLE ${tmp};
     CREATE TABLE ${tmp} (
-      ProjNr NVARCHAR(50) PRIMARY KEY,
-      ProjBezeichnung NVARCHAR(255) NULL,
-      ProjAdr INT NULL,
-      RechAdr INT NULL,
-      BauHrAdr INT NULL,
-      AbtNr INT NULL,
-      SachBearb NVARCHAR(50) NULL,
-      AuftragsSumme NUMERIC(18,2) NULL,
-      Beginn DATETIMEOFFSET NULL
+      ProjNr NVARCHAR(15) PRIMARY KEY,
+      ProjBezeichnung NVARCHAR(MAX) NULL,
+      ProjAdr NVARCHAR(24) NULL,
+      RechAdr NVARCHAR(24) NULL,
+      BauHrAdr NVARCHAR(24) NULL,
+      AbtNr FLOAT NULL,
+      SachBearb NVARCHAR(20) NULL,
+      AuftragsSumme FLOAT NULL,
+      Beginn DATETIME NULL
     );
   `);
 
