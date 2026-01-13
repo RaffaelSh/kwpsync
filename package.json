@@ -8,7 +8,8 @@
     "start": "node server.js",
     "realtime": "node realtime-sync.js",
     "test": "node test-env.js",
-    "inspect:mssql": "node inspect-mssql.js"
+    "inspect:mssql": "node inspect-mssql.js",
+    "inspect:schema": "node inspect-mssql-schema.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.44.4",
