@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "realtime": "node realtime-sync.js"
+    "realtime": "node realtime-sync.js",
+    "test": "node test-env.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.44.4",
