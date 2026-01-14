@@ -63,6 +63,7 @@ function bracket(name) {
 
 async function run() {
   const pool = await sql.connect(config);
+  const outputFormat = String(process.env.OUTPUT_FORMAT || 'table').toLowerCase();
 
   const columnsRes = await pool.request().query(`
     SELECT
@@ -84,12 +85,24 @@ async function run() {
     return;
   }
 
-  console.log('\nMSSQL dbo.Projekt schema');
-  console.table(columns);
+  const result = {
+    schema: columns,
+    total: null,
+    stats: null,
+    sample: null,
+  };
+
+  if (outputFormat !== 'json') {
+    console.log('\nMSSQL dbo.Projekt schema');
+    console.table(columns);
+  }
 
   const countRes = await pool.request().query('SELECT COUNT(*) AS total FROM dbo.Projekt;');
   const total = countRes.recordset?.[0]?.total ?? 0;
-  console.log(`Rows total: ${total}`);
+  result.total = total;
+  if (outputFormat !== 'json') {
+    console.log(`Rows total: ${total}`);
+  }
 
   const selectParts = ['COUNT(*) AS total'];
   for (const col of columns) {
@@ -125,8 +138,11 @@ async function run() {
     };
   });
 
-  console.log('\nMSSQL dbo.Projekt stats');
-  console.table(output);
+  result.stats = output;
+  if (outputFormat !== 'json') {
+    console.log('\nMSSQL dbo.Projekt stats');
+    console.table(output);
+  }
 
   const sampleRes = await pool.request().query(`
     SELECT TOP (5)
@@ -135,8 +151,15 @@ async function run() {
     ORDER BY ${bracket('projnr')} DESC;
   `);
 
-  console.log('\nMSSQL dbo.Projekt sample (top 5 by projnr desc)');
-  console.table(sampleRes.recordset || []);
+  result.sample = sampleRes.recordset || [];
+  if (outputFormat !== 'json') {
+    console.log('\nMSSQL dbo.Projekt sample (top 5 by projnr desc)');
+    console.table(result.sample);
+  }
+
+  if (outputFormat === 'json') {
+    console.log(JSON.stringify(result, null, 2));
+  }
 
   await pool.close();
 }
