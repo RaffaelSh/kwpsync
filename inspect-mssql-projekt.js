@@ -9,6 +9,7 @@ if (missing.length) {
 }
 
 const rawServer = process.env.MSSQL_SERVER;
+const normalizedServer = rawServer.replace(/\\\\+/g, '\\');
 const portValue = process.env.MSSQL_PORT;
 const parsedPort = portValue ? Number.parseInt(portValue, 10) : null;
 if (portValue && (!Number.isFinite(parsedPort) || parsedPort <= 0)) {
@@ -17,8 +18,8 @@ if (portValue && (!Number.isFinite(parsedPort) || parsedPort <= 0)) {
 }
 let server = rawServer;
 const options = { encrypt: false, trustServerCertificate: true };
-if (rawServer.includes('\\')) {
-  const [host, instanceName] = rawServer.split('\\');
+if (normalizedServer.includes('\\')) {
+  const [host, instanceName] = normalizedServer.split('\\');
   server = host;
   if (instanceName && !parsedPort) {
     options.instanceName = instanceName;
