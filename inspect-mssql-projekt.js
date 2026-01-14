@@ -9,18 +9,25 @@ if (missing.length) {
 }
 
 const rawServer = process.env.MSSQL_SERVER;
+const portValue = process.env.MSSQL_PORT;
+const parsedPort = portValue ? Number.parseInt(portValue, 10) : null;
+if (portValue && (!Number.isFinite(parsedPort) || parsedPort <= 0)) {
+  console.error(`Invalid MSSQL_PORT value: ${portValue}`);
+  process.exit(1);
+}
 let server = rawServer;
 const options = { encrypt: false, trustServerCertificate: true };
 if (rawServer.includes('\\')) {
   const [host, instanceName] = rawServer.split('\\');
   server = host;
-  if (instanceName) {
+  if (instanceName && !parsedPort) {
     options.instanceName = instanceName;
   }
 }
 
 const config = {
   server,
+  ...(parsedPort ? { port: parsedPort } : {}),
   database: process.env.MSSQL_DB,
   user: process.env.MSSQL_USER,
   password: process.env.MSSQL_PASS,
