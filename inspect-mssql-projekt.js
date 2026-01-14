@@ -46,7 +46,6 @@ const numericTypes = new Set([
   'real',
   'money',
   'smallmoney',
-  'bit',
 ]);
 
 const dateTypes = new Set([
@@ -57,6 +56,8 @@ const dateTypes = new Set([
   'datetimeoffset',
   'time',
 ]);
+
+const bitTypes = new Set(['bit']);
 
 const textTypes = new Set([
   'nvarchar',
@@ -139,7 +140,10 @@ async function run() {
       selectParts.push(`CAST(NULL AS INT) AS ${bracket(name + '__minlen')}`);
       selectParts.push(`CAST(NULL AS INT) AS ${bracket(name + '__maxlen')}`);
     }
-    if (numericTypes.has(dataType) || dateTypes.has(dataType)) {
+    if (bitTypes.has(dataType)) {
+      selectParts.push(`MIN(CAST(${bracket(name)} AS TINYINT)) AS ${bracket(name + '__min')}`);
+      selectParts.push(`MAX(CAST(${bracket(name)} AS TINYINT)) AS ${bracket(name + '__max')}`);
+    } else if (numericTypes.has(dataType) || dateTypes.has(dataType)) {
       selectParts.push(`MIN(${bracket(name)}) AS ${bracket(name + '__min')}`);
       selectParts.push(`MAX(${bracket(name)}) AS ${bracket(name + '__max')}`);
     }
