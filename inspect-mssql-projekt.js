@@ -46,6 +46,7 @@ const numericTypes = new Set([
   'real',
   'money',
   'smallmoney',
+  'bit',
 ]);
 
 const dateTypes = new Set([
@@ -55,6 +56,25 @@ const dateTypes = new Set([
   'smalldatetime',
   'datetimeoffset',
   'time',
+]);
+
+const textTypes = new Set([
+  'nvarchar',
+  'varchar',
+  'nchar',
+  'char',
+  'text',
+  'ntext',
+  'sysname',
+  'xml',
+]);
+
+const binaryTypes = new Set([
+  'binary',
+  'varbinary',
+  'image',
+  'timestamp',
+  'rowversion',
 ]);
 
 function bracket(name) {
@@ -109,8 +129,16 @@ async function run() {
     const name = col.COLUMN_NAME;
     const dataType = String(col.DATA_TYPE).toLowerCase();
     selectParts.push(`SUM(CASE WHEN ${bracket(name)} IS NULL THEN 1 ELSE 0 END) AS ${bracket(name + '__nulls')}`);
-    selectParts.push(`MIN(LEN(TRY_CAST(${bracket(name)} AS NVARCHAR(MAX)))) AS ${bracket(name + '__minlen')}`);
-    selectParts.push(`MAX(LEN(TRY_CAST(${bracket(name)} AS NVARCHAR(MAX)))) AS ${bracket(name + '__maxlen')}`);
+    if (textTypes.has(dataType)) {
+      selectParts.push(`MIN(LEN(CAST(${bracket(name)} AS NVARCHAR(MAX)))) AS ${bracket(name + '__minlen')}`);
+      selectParts.push(`MAX(LEN(CAST(${bracket(name)} AS NVARCHAR(MAX)))) AS ${bracket(name + '__maxlen')}`);
+    } else if (binaryTypes.has(dataType)) {
+      selectParts.push(`MIN(DATALENGTH(${bracket(name)})) AS ${bracket(name + '__minlen')}`);
+      selectParts.push(`MAX(DATALENGTH(${bracket(name)})) AS ${bracket(name + '__maxlen')}`);
+    } else {
+      selectParts.push(`CAST(NULL AS INT) AS ${bracket(name + '__minlen')}`);
+      selectParts.push(`CAST(NULL AS INT) AS ${bracket(name + '__maxlen')}`);
+    }
     if (numericTypes.has(dataType) || dateTypes.has(dataType)) {
       selectParts.push(`MIN(${bracket(name)}) AS ${bracket(name + '__min')}`);
       selectParts.push(`MAX(${bracket(name)}) AS ${bracket(name + '__max')}`);
