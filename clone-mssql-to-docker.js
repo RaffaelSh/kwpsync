@@ -127,7 +127,7 @@ async function waitForTarget() {
   const delayMs = Number.parseInt(process.env.MSSQL_TARGET_WAIT_MS || '2000', 10);
   for (let i = 0; i < maxAttempts; i += 1) {
     try {
-      const pool = await sql.connect({ ...targetConfig, database: 'master' });
+      const pool = await new sql.ConnectionPool({ ...targetConfig, database: 'master' }).connect();
       await pool.close();
       return;
     } catch (_err) {
@@ -138,7 +138,7 @@ async function waitForTarget() {
 }
 
 async function ensureTargetDb() {
-  const masterPool = await sql.connect({ ...targetConfig, database: 'master' });
+  const masterPool = await new sql.ConnectionPool({ ...targetConfig, database: 'master' }).connect();
   if (dropTarget) {
     await masterPool.request().batch(`
       IF DB_ID(N'${targetDb}') IS NOT NULL
@@ -304,8 +304,8 @@ async function run() {
   await waitForTarget();
   await ensureTargetDb();
 
-  const sourcePool = await sql.connect(sourceConfig);
-  const targetPool = await sql.connect(targetConfig);
+  const sourcePool = await new sql.ConnectionPool(sourceConfig).connect();
+  const targetPool = await new sql.ConnectionPool(targetConfig).connect();
 
   const tables = await fetchTables(sourcePool);
   console.log(`Tables to clone: ${tables.length}`);
