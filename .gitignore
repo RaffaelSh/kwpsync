@@ -6,3 +6,5 @@ yarn-error.log*
 .pnpm-store/
 .env
 .DS_Store
+backups/
+reports/
