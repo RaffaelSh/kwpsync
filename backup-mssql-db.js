@@ -44,6 +44,7 @@ const shouldRestore = String(process.env.MSSQL_RESTORE ?? '1').toLowerCase() !==
 const allowDrop = String(process.env.MSSQL_DROP_DEV ?? '0').toLowerCase() === '1';
 const setReadOnly = String(process.env.MSSQL_READONLY ?? '1').toLowerCase() !== '0';
 const backupPathEnv = process.env.MSSQL_BACKUP_PATH;
+const backupDirEnv = process.env.MSSQL_BACKUP_DIR;
 const copyBackupTo = process.env.MSSQL_COPY_BACKUP_TO;
 const dataPathOverride = process.env.MSSQL_DATA_PATH;
 const logPathOverride = process.env.MSSQL_LOG_PATH;
@@ -58,16 +59,61 @@ function sqlString(value) {
   return `N'${String(value).replace(/'/g, "''")}'`;
 }
 
-function resolveBackupPath() {
-  if (backupPathEnv) {
-    return path.isAbsolute(backupPathEnv)
-      ? backupPathEnv
-      : path.join(process.cwd(), backupPathEnv);
+function isBakFile(filePath) {
+  return path.extname(filePath).toLowerCase() === '.bak';
+}
+
+function resolvePath(input) {
+  if (!input) return null;
+  return path.isAbsolute(input) ? input : path.join(process.cwd(), input);
+}
+
+async function detectBackupDir(pool) {
+  try {
+    const res = await pool.request().query(
+      "SELECT CAST(SERVERPROPERTY('InstanceDefaultBackupPath') AS NVARCHAR(4000)) AS path;"
+    );
+    const row = res.recordset?.[0];
+    if (row?.path) return row.path;
+  } catch (_err) {
+    // ignore
   }
+
+  try {
+    const res = await pool.request().query(
+      "EXEC master.dbo.xp_instance_regread N'HKEY_LOCAL_MACHINE', N'SOFTWARE\\\\Microsoft\\\\MSSQLServer\\\\MSSQLServer', N'BackupDirectory';"
+    );
+    const row = res.recordset?.[0];
+    return row?.Data || row?.Value || row?.value || row?.path || null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function resolveBackupPath(pool) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const dir = path.join(process.cwd(), 'backups');
-  fs.mkdirSync(dir, { recursive: true });
-  return path.join(dir, `${srcDb}_${stamp}.bak`);
+  const defaultName = `${srcDb}_${stamp}.bak`;
+
+  if (backupPathEnv) {
+    const resolved = resolvePath(backupPathEnv);
+    return isBakFile(resolved) ? resolved : path.join(resolved, defaultName);
+  }
+
+  if (backupDirEnv) {
+    const resolved = resolvePath(backupDirEnv);
+    return path.join(resolved, defaultName);
+  }
+
+  const detectedDir = await detectBackupDir(pool);
+  if (detectedDir) {
+    return path.join(detectedDir, defaultName);
+  }
+
+  const fallbackDir = path.join(process.cwd(), 'backups');
+  fs.mkdirSync(fallbackDir, { recursive: true });
+  console.warn('Could not detect SQL Server backup directory, using local ./backups folder.');
+  console.warn('If backup fails, set MSSQL_BACKUP_PATH to a SQL Server-writable path.');
+  return path.join(fallbackDir, defaultName);
 }
 
 function parseFileMove(file, index) {
@@ -83,7 +129,7 @@ function parseFileMove(file, index) {
 
 async function run() {
   const pool = await sql.connect(config);
-  const backupPath = resolveBackupPath();
+  const backupPath = await resolveBackupPath(pool);
 
   console.log(`Backup source DB: ${srcDb}`);
   console.log(`Backup path: ${backupPath}`);
@@ -171,7 +217,24 @@ async function run() {
   }, null, 2));
 }
 
+function formatSqlError(err) {
+  if (!err) return 'Unknown error';
+  const parts = [];
+  const info = err?.originalError?.info;
+  if (Array.isArray(info)) {
+    for (const item of info) {
+      if (item?.message) parts.push(item.message);
+    }
+  } else if (info?.message) {
+    parts.push(info.message);
+  }
+  if (err?.message) parts.push(err.message);
+  if (err?.code) parts.push(`code=${err.code}`);
+  if (err?.number) parts.push(`number=${err.number}`);
+  return Array.from(new Set(parts)).join(' | ');
+}
+
 run().catch((err) => {
-  console.error('Backup/restore failed:', err?.message || err);
+  console.error('Backup/restore failed:', formatSqlError(err));
   process.exit(1);
 });
