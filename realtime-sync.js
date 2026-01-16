@@ -5,6 +5,8 @@ const { createClient } = require('@supabase/supabase-js');
 const QUEUE_SCHEMA = process.env.KWP_QUEUE_SCHEMA || 'public';
 const QUEUE_TABLE = process.env.KWP_QUEUE_TABLE || 'kwp_project_queue';
 const TEMPLATE_PROJNR = (process.env.KWP_TEMPLATE_PROJNR || '').trim() || null;
+const POLL_INTERVAL_MS = Number.parseInt(process.env.KWP_QUEUE_POLL_MS || '30000', 10);
+const POLL_LIMIT = Number.parseInt(process.env.KWP_QUEUE_POLL_LIMIT || '50', 10);
 
 const supa = createClient(process.env.SUPA_URL, process.env.SUPA_SERVICE_KEY, {
   realtime: {
@@ -225,6 +227,7 @@ async function insertProjektFromTemplate(trx, payload) {
 
 const queue = [];
 let processing = false;
+const enqueuedIds = new Set();
 
 async function updateQueueRow(id, values) {
   if (!id) return;
@@ -272,7 +275,17 @@ async function handleQueueItem(row) {
       error: fitString(err.message || String(err), 2000),
     });
     console.error('Queue processing error:', err);
+  } finally {
+    if (id) enqueuedIds.delete(id);
   }
+}
+
+function enqueue(row) {
+  if (!row?.id) return;
+  if (enqueuedIds.has(row.id)) return;
+  enqueuedIds.add(row.id);
+  queue.push(row);
+  processQueue();
 }
 
 async function processQueue() {
@@ -288,21 +301,43 @@ async function processQueue() {
   }
 }
 
+async function fetchPendingQueue() {
+  const { data, error } = await supa
+    .schema(QUEUE_SCHEMA)
+    .from(QUEUE_TABLE)
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(POLL_LIMIT);
+  if (error) {
+    console.error('Pending fetch error:', error.message);
+    return;
+  }
+  for (const row of data || []) {
+    enqueue(row);
+  }
+}
+
+function startPolling() {
+  if (!Number.isFinite(POLL_INTERVAL_MS) || POLL_INTERVAL_MS <= 0) return;
+  setInterval(fetchPendingQueue, POLL_INTERVAL_MS);
+}
+
 console.log(`Realtime queue starting for ${QUEUE_SCHEMA}.${QUEUE_TABLE}...`);
+fetchPendingQueue();
+startPolling();
 
 supa
   .channel(`realtime:${QUEUE_SCHEMA}:${QUEUE_TABLE}`)
   .on('postgres_changes', { event: 'INSERT', schema: QUEUE_SCHEMA, table: QUEUE_TABLE }, (payload) => {
     if (!payload?.new) return;
     if (payload.new.status && payload.new.status !== 'pending') return;
-    queue.push(payload.new);
-    processQueue();
+    enqueue(payload.new);
   })
   .on('postgres_changes', { event: 'UPDATE', schema: QUEUE_SCHEMA, table: QUEUE_TABLE }, (payload) => {
     if (!payload?.new) return;
     if (payload.new.status !== 'pending') return;
-    queue.push(payload.new);
-    processQueue();
+    enqueue(payload.new);
   })
   .subscribe((status) => {
     console.log('Realtime status:', status);
