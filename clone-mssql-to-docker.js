@@ -52,6 +52,11 @@ const dropTarget = String(process.env.MSSQL_TARGET_DROP ?? '1').toLowerCase() !=
 const batchSize = Number.parseInt(process.env.CLONE_BATCH_SIZE || '1000', 10);
 const skipData = String(process.env.CLONE_SCHEMA_ONLY || '0').toLowerCase() === '1';
 const tableFilter = process.env.CLONE_TABLE_FILTER || '';
+const skipTables = (process.env.CLONE_SKIP_TABLES || '')
+  .split(',')
+  .map((t) => t.trim())
+  .filter(Boolean);
+const continueOnError = String(process.env.CLONE_CONTINUE_ON_ERROR || '1').toLowerCase() !== '0';
 const skipExistingTables = String(process.env.CLONE_SKIP_EXISTING_TABLES || '1').toLowerCase() !== '0';
 const compareCounts = String(process.env.CLONE_COMPARE_COUNTS || '1').toLowerCase() !== '0';
 const truncateExisting = String(process.env.CLONE_TRUNCATE_EXISTING || '0').toLowerCase() === '1';
@@ -68,6 +73,9 @@ function bracket(name) {
 
 function formatType(col) {
   const type = col.data_type.toLowerCase();
+  if (type === 'text') return 'varchar(MAX)';
+  if (type === 'ntext') return 'nvarchar(MAX)';
+  if (type === 'image') return 'varbinary(MAX)';
   if (type === 'nvarchar' || type === 'nchar') {
     if (col.max_length === -1) return `${type}(MAX)`;
     return `${type}(${Math.floor(col.max_length / 2)})`;
@@ -308,7 +316,15 @@ async function copyTableData(sourcePool, targetPool, schema, table, columns) {
           .then(() => targetPool.request().bulk(tableToInsert, { keepNulls: true }))
           .then(() => request.resume())
           .catch((err) => {
-            request.cancel();
+            request.pause();
+            try {
+              const cancelResult = request.cancel?.();
+              if (cancelResult?.catch) {
+                cancelResult.catch(() => {});
+              }
+            } catch (_cancelErr) {
+              // ignore cancel errors
+            }
             reject(err);
           });
       }
@@ -352,41 +368,53 @@ async function run() {
 
   for (const tableInfo of tables) {
     const { schema_name: schema, table_name: table, object_id: objectId } = tableInfo;
+    const fullName = `${schema}.${table}`;
+    if (skipTables.includes(fullName)) {
+      console.log(`Skipping ${fullName} (skip list).`);
+      continue;
+    }
     const columns = await fetchColumns(sourcePool, objectId);
     if (!columns.length) continue;
 
-    const exists = await tableExists(targetPool, schema, table);
-    if (exists && dropExistingTables) {
-      console.log(`Dropping existing ${schema}.${table}...`);
-      await dropTable(targetPool, schema, table);
-    }
+    try {
+      const exists = await tableExists(targetPool, schema, table);
+      if (exists && dropExistingTables) {
+        console.log(`Dropping existing ${fullName}...`);
+        await dropTable(targetPool, schema, table);
+      }
 
-    const stillExists = exists && !dropExistingTables;
-    if (!stillExists) {
-      console.log(`Creating ${schema}.${table}...`);
-      await createSchema(targetPool, schema);
-      await createTable(targetPool, schema, table, columns);
-    }
+      const stillExists = exists && !dropExistingTables;
+      if (!stillExists) {
+        console.log(`Creating ${fullName}...`);
+        await createSchema(targetPool, schema);
+        await createTable(targetPool, schema, table, columns);
+      }
 
-    if (!skipData) {
-      if (stillExists && compareCounts) {
-        const [sourceCount, targetCount] = await Promise.all([
-          getTableRowCount(sourcePool, schema, table),
-          getTableRowCount(targetPool, schema, table),
-        ]);
-        if (sourceCount != null && targetCount != null && sourceCount === targetCount) {
-          console.log(`Skipping ${schema}.${table} (row counts match: ${sourceCount}).`);
-          continue;
+      if (!skipData) {
+        if (stillExists && compareCounts) {
+          const [sourceCount, targetCount] = await Promise.all([
+            getTableRowCount(sourcePool, schema, table),
+            getTableRowCount(targetPool, schema, table),
+          ]);
+          if (sourceCount != null && targetCount != null && sourceCount === targetCount) {
+            console.log(`Skipping ${fullName} (row counts match: ${sourceCount}).`);
+            continue;
+          }
         }
-      }
 
-      if (stillExists && truncateExisting) {
-        console.log(`Truncating ${schema}.${table}...`);
-        await truncateTable(targetPool, schema, table);
-      }
+        if (stillExists && truncateExisting) {
+          console.log(`Truncating ${fullName}...`);
+          await truncateTable(targetPool, schema, table);
+        }
 
-      console.log(`Copying data ${schema}.${table}...`);
-      await copyTableData(sourcePool, targetPool, schema, table, columns);
+        console.log(`Copying data ${fullName}...`);
+        await copyTableData(sourcePool, targetPool, schema, table, columns);
+      }
+    } catch (err) {
+      console.error(`Table failed ${fullName}:`, err?.message || err);
+      if (!continueOnError) {
+        throw err;
+      }
     }
   }
 
