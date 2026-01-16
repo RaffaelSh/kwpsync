@@ -52,6 +52,10 @@ const dropTarget = String(process.env.MSSQL_TARGET_DROP ?? '1').toLowerCase() !=
 const batchSize = Number.parseInt(process.env.CLONE_BATCH_SIZE || '1000', 10);
 const skipData = String(process.env.CLONE_SCHEMA_ONLY || '0').toLowerCase() === '1';
 const tableFilter = process.env.CLONE_TABLE_FILTER || '';
+const skipExistingTables = String(process.env.CLONE_SKIP_EXISTING_TABLES || '1').toLowerCase() !== '0';
+const compareCounts = String(process.env.CLONE_COMPARE_COUNTS || '1').toLowerCase() !== '0';
+const truncateExisting = String(process.env.CLONE_TRUNCATE_EXISTING || '0').toLowerCase() === '1';
+const dropExistingTables = String(process.env.CLONE_DROP_EXISTING_TABLES || '0').toLowerCase() === '1';
 
 function runDockerStart() {
   const startScript = process.env.MSSQL_DOCKER_START_SCRIPT || './docker-mssql-start.js';
@@ -107,12 +111,12 @@ function getSqlType(col) {
     case 'nvarchar': return sql.NVarChar(len === -1 ? sql.MAX : Math.floor(len / 2));
     case 'char': return sql.Char(len === -1 ? sql.MAX : len);
     case 'nchar': return sql.NChar(len === -1 ? sql.MAX : Math.floor(len / 2));
-    case 'text': return sql.Text;
-    case 'ntext': return sql.NText;
+    case 'text': return sql.VarChar(sql.MAX);
+    case 'ntext': return sql.NVarChar(sql.MAX);
     case 'xml': return sql.Xml;
     case 'binary': return sql.Binary(len === -1 ? sql.MAX : len);
     case 'varbinary': return sql.VarBinary(len === -1 ? sql.MAX : len);
-    case 'image': return sql.Image;
+    case 'image': return sql.VarBinary(sql.MAX);
     default: return sql.NVarChar(sql.MAX);
   }
 }
@@ -205,6 +209,42 @@ async function createSchema(targetPool, schema) {
     IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = N'${schema}')
       EXEC('CREATE SCHEMA ${bracket(schema)}');
   `);
+}
+
+async function tableExists(targetPool, schema, table) {
+  const res = await targetPool.request()
+    .input('schema', sql.NVarChar, schema)
+    .input('table', sql.NVarChar, table)
+    .query(`
+      SELECT 1
+      FROM sys.tables t
+      JOIN sys.schemas s ON t.schema_id = s.schema_id
+      WHERE s.name = @schema AND t.name = @table;
+    `);
+  return Boolean(res.recordset?.[0]);
+}
+
+async function getTableRowCount(pool, schema, table) {
+  const res = await pool.request()
+    .input('schema', sql.NVarChar, schema)
+    .input('table', sql.NVarChar, table)
+    .query(`
+      SELECT SUM(p.row_count) AS row_count
+      FROM sys.tables t
+      JOIN sys.schemas s ON t.schema_id = s.schema_id
+      JOIN sys.dm_db_partition_stats p ON t.object_id = p.object_id
+      WHERE s.name = @schema AND t.name = @table AND p.index_id IN (0,1);
+    `);
+  const row = res.recordset?.[0];
+  return row?.row_count == null ? null : Number(row.row_count);
+}
+
+async function dropTable(targetPool, schema, table) {
+  await targetPool.request().batch(`DROP TABLE ${bracket(schema)}.${bracket(table)};`);
+}
+
+async function truncateTable(targetPool, schema, table) {
+  await targetPool.request().batch(`TRUNCATE TABLE ${bracket(schema)}.${bracket(table)};`);
 }
 
 async function createTable(targetPool, schema, table, columns) {
@@ -315,11 +355,36 @@ async function run() {
     const columns = await fetchColumns(sourcePool, objectId);
     if (!columns.length) continue;
 
-    console.log(`Creating ${schema}.${table}...`);
-    await createSchema(targetPool, schema);
-    await createTable(targetPool, schema, table, columns);
+    const exists = await tableExists(targetPool, schema, table);
+    if (exists && dropExistingTables) {
+      console.log(`Dropping existing ${schema}.${table}...`);
+      await dropTable(targetPool, schema, table);
+    }
+
+    const stillExists = exists && !dropExistingTables;
+    if (!stillExists) {
+      console.log(`Creating ${schema}.${table}...`);
+      await createSchema(targetPool, schema);
+      await createTable(targetPool, schema, table, columns);
+    }
 
     if (!skipData) {
+      if (stillExists && compareCounts) {
+        const [sourceCount, targetCount] = await Promise.all([
+          getTableRowCount(sourcePool, schema, table),
+          getTableRowCount(targetPool, schema, table),
+        ]);
+        if (sourceCount != null && targetCount != null && sourceCount === targetCount) {
+          console.log(`Skipping ${schema}.${table} (row counts match: ${sourceCount}).`);
+          continue;
+        }
+      }
+
+      if (stillExists && truncateExisting) {
+        console.log(`Truncating ${schema}.${table}...`);
+        await truncateTable(targetPool, schema, table);
+      }
+
       console.log(`Copying data ${schema}.${table}...`);
       await copyTableData(sourcePool, targetPool, schema, table, columns);
     }
