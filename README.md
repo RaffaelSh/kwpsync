@@ -21,6 +21,7 @@
    KWP_QUEUE_SCHEMA=public
    KWP_QUEUE_TABLE=kwp_project_queue
    KWP_TEMPLATE_PROJNR=
+   KWP_TEMPLATE_ADRNR=
    KWP_QUEUE_POLL_MS=30000
    KWP_QUEUE_POLL_LIMIT=50
    PORT=4000
@@ -89,6 +90,7 @@ Wir nutzen eine Queue-Tabelle in Supabase. CRM schreibt dort nur ein JSON-Payloa
    ```
 5. Der Worker verarbeitet den Eintrag, schreibt nach MSSQL und setzt `status` auf `done` oder `error`.
    Zusätzlich gibt es ein Polling (alle 30s), falls Realtime/Websocket nicht erreichbar ist.
+   Der Worker klont eine bestehende Adresse als Template. Optional `KWP_TEMPLATE_ADRNR` setzen.
 
 ## Tabelle in Supabase (optional: KWP → Supabase Pull)
 Falls du weiterhin die Pull-Synchronisation nutzen willst:

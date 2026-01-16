@@ -5,6 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 const QUEUE_SCHEMA = process.env.KWP_QUEUE_SCHEMA || 'public';
 const QUEUE_TABLE = process.env.KWP_QUEUE_TABLE || 'kwp_project_queue';
 const TEMPLATE_PROJNR = (process.env.KWP_TEMPLATE_PROJNR || '').trim() || null;
+const TEMPLATE_ADRNR = (process.env.KWP_TEMPLATE_ADRNR || '').trim() || null;
 const POLL_INTERVAL_MS = Number.parseInt(process.env.KWP_QUEUE_POLL_MS || '30000', 10);
 const POLL_LIMIT = Number.parseInt(process.env.KWP_QUEUE_POLL_LIMIT || '50', 10);
 
@@ -35,6 +36,8 @@ const toFloat = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 };
+
+let adrAdressenColumnsCache = null;
 
 function parsePayload(row) {
   if (!row) return null;
@@ -100,6 +103,37 @@ async function ensureOrt(trx, address) {
   return nextId;
 }
 
+async function getAdrAdressenColumns(trx) {
+  if (adrAdressenColumnsCache) return adrAdressenColumnsCache;
+  const req = new sql.Request(trx);
+  const res = await req.query(`
+    SELECT c.name AS column_name, t.name AS data_type, c.is_identity, c.is_computed
+    FROM sys.columns c
+    JOIN sys.types t ON c.user_type_id = t.user_type_id
+    WHERE c.object_id = OBJECT_ID('dbo.adrAdressen')
+    ORDER BY c.column_id
+  `);
+  adrAdressenColumnsCache = res.recordset
+    .filter((row) => !row.is_identity && !row.is_computed)
+    .filter((row) => row.data_type !== 'timestamp')
+    .filter((row) => row.column_name !== 'Offline_Sync_Id')
+    .map((row) => row.column_name);
+  return adrAdressenColumnsCache;
+}
+
+async function resolveTemplateAdr(trx) {
+  if (TEMPLATE_ADRNR) return TEMPLATE_ADRNR;
+  const req = new sql.Request(trx);
+  if (TEMPLATE_PROJNR) {
+    req.input('TemplateProjNr', sql.NVarChar(30), TEMPLATE_PROJNR);
+    const res = await req.query('SELECT ProjAdr FROM dbo.Projekt WHERE ProjNr = @TemplateProjNr');
+    if (res.recordset.length) return res.recordset[0].ProjAdr;
+  }
+  const res = await req.query('SELECT TOP 1 ProjAdr FROM dbo.Projekt ORDER BY Createdate DESC');
+  if (res.recordset.length) return res.recordset[0].ProjAdr;
+  return null;
+}
+
 async function ensureAdresse(trx, address) {
   if (!address?.adrNrGes) {
     throw new Error('AdrNrGes fehlt.');
@@ -111,6 +145,24 @@ async function ensureAdresse(trx, address) {
   if (exists.recordset.length) {
     return address.adrNrGes;
   }
+  const templateAdr = await resolveTemplateAdr(trx);
+  if (!templateAdr) {
+    throw new Error('Keine Template-Adresse gefunden. Setze KWP_TEMPLATE_ADRNR.');
+  }
+  const columns = await getAdrAdressenColumns(trx);
+  const columnList = columns.map((col) => `[${col}]`).join(', ');
+  const selectList = columns
+    .map((col) => {
+      if (col === 'AdrNrGes') return '@AdrNrGes';
+      if (col === 'Name') return 'COALESCE(@Name, [Name])';
+      if (col === 'Vorname') return 'COALESCE(@Vorname, [Vorname])';
+      if (col === 'Strasse') return 'COALESCE(@Strasse, [Strasse])';
+      if (col === 'Ort') return 'COALESCE(@Ort, [Ort])';
+      if (col === 'RechnungsMail') return 'COALESCE(@RechnungsMail, [RechnungsMail])';
+      return `[${col}]`;
+    })
+    .join(', ');
+
   const insertReq = new sql.Request(trx);
   insertReq.input('AdrNrGes', sql.NVarChar(24), address.adrNrGes);
   insertReq.input('Name', sql.NVarChar(100), address.name);
@@ -118,11 +170,13 @@ async function ensureAdresse(trx, address) {
   insertReq.input('Strasse', sql.NVarChar(80), address.strasse);
   insertReq.input('Ort', sql.Int, ortId);
   insertReq.input('RechnungsMail', sql.NVarChar(510), address.rechnungsmail);
-  insertReq.input('MahnSperre', sql.Bit, 0);
-  insertReq.input('MwStPflicht', sql.Bit, 1);
-  await insertReq.query(
-    'INSERT INTO dbo.adrAdressen (AdrNrGes, Name, Vorname, Strasse, Ort, RechnungsMail, MahnSperre, MwStPflicht) VALUES (@AdrNrGes, @Name, @Vorname, @Strasse, @Ort, @RechnungsMail, @MahnSperre, @MwStPflicht)'
-  );
+  insertReq.input('TemplateAdr', sql.NVarChar(24), templateAdr);
+
+  const insertSql = `INSERT INTO dbo.adrAdressen (${columnList}) SELECT ${selectList} FROM dbo.adrAdressen WHERE AdrNrGes = @TemplateAdr;`;
+  const result = await insertReq.query(insertSql);
+  if (result.rowsAffected[0] !== 1) {
+    throw new Error(`Template-Adresse ${templateAdr} nicht gefunden.`);
+  }
   return address.adrNrGes;
 }
 
