@@ -118,8 +118,10 @@ async function ensureAdresse(trx, address) {
   insertReq.input('Strasse', sql.NVarChar(80), address.strasse);
   insertReq.input('Ort', sql.Int, ortId);
   insertReq.input('RechnungsMail', sql.NVarChar(510), address.rechnungsmail);
+  insertReq.input('MahnSperre', sql.Bit, 0);
+  insertReq.input('MwStPflicht', sql.Bit, 1);
   await insertReq.query(
-    'INSERT INTO dbo.adrAdressen (AdrNrGes, Name, Vorname, Strasse, Ort, RechnungsMail) VALUES (@AdrNrGes, @Name, @Vorname, @Strasse, @Ort, @RechnungsMail)'
+    'INSERT INTO dbo.adrAdressen (AdrNrGes, Name, Vorname, Strasse, Ort, RechnungsMail, MahnSperre, MwStPflicht) VALUES (@AdrNrGes, @Name, @Vorname, @Strasse, @Ort, @RechnungsMail, @MahnSperre, @MwStPflicht)'
   );
   return address.adrNrGes;
 }
