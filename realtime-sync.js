@@ -23,6 +23,30 @@ const poolPromise = new sql.ConnectionPool({
   options: { encrypt: false, trustServerCertificate: true },
 }).connect();
 
+async function logTriggerDefinitions() {
+  if (process.env.KWP_DEBUG_TRIGGERS !== '1') return;
+  try {
+    const pool = await poolPromise;
+    const req = new sql.Request(pool);
+    const res = await req.query(`
+      SELECT
+        t.name AS trigger_name,
+        OBJECT_NAME(t.parent_id) AS table_name,
+        m.definition
+      FROM sys.triggers t
+      JOIN sys.tables tb ON t.parent_id = tb.object_id
+      JOIN sys.sql_modules m ON t.object_id = m.object_id
+      WHERE tb.name IN ('adrAdressen','Projekt','adrOrte')
+      ORDER BY table_name, trigger_name
+    `);
+    for (const row of res.recordset || []) {
+      console.log(`Trigger ${row.table_name}.${row.trigger_name}:\n${row.definition}\n---`);
+    }
+  } catch (err) {
+    console.error('Trigger debug failed:', err.message || err);
+  }
+}
+
 const fitString = (v, maxLen, label) => {
   if (v == null || v === '') return null;
   const s = String(v);
@@ -410,7 +434,11 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   const columnList = columns.map((col) => `[${col}]`).join(', ');
   const valueList = columns.map((col) => `@${col}`).join(', ');
   const insertSql = `INSERT INTO dbo.adrAdressen (${columnList}) VALUES (${valueList});`;
-  await insertReq.query(insertSql);
+  try {
+    await insertReq.query(insertSql);
+  } catch (err) {
+    throw new Error(`${baseLabel} insert failed: ${err.message || err}`);
+  }
   return { adrNrGes: data.AdrNrGes, extras };
 }
 
@@ -511,7 +539,11 @@ async function insertProjektDirect(trx, payload) {
   const columnList = columns.map((col) => `[${col}]`).join(', ');
   const valueList = columns.map((col) => `@${col}`).join(', ');
   const insertSql = `INSERT INTO dbo.Projekt (${columnList}) VALUES (${valueList});`;
-  await insertReq.query(insertSql);
+  try {
+    await insertReq.query(insertSql);
+  } catch (err) {
+    throw new Error(`projekt insert failed: ${err.message || err}`);
+  }
   return { status: 'inserted', projnr: projectData.ProjNr };
 }
 
@@ -614,6 +646,7 @@ function startPolling() {
 }
 
 console.log(`Realtime queue starting for ${QUEUE_SCHEMA}.${QUEUE_TABLE}...`);
+logTriggerDefinitions();
 fetchPendingQueue();
 startPolling();
 
