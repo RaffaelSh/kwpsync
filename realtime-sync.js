@@ -73,6 +73,7 @@ const toNumber = (v, label) => {
 
 let adrAdressenColumnsCache = null;
 let projektColumnsCache = null;
+let refDefaultsCache = null;
 
 function parsePayload(row) {
   if (!row) return null;
@@ -349,6 +350,59 @@ function applyAddressDefaults(data, metaByName, defaults) {
   }
 }
 
+async function fetchSingleValue(trx, query, field, label) {
+  const req = new sql.Request(trx);
+  const res = await req.query(query);
+  if (!res.recordset.length || res.recordset[0][field] == null) {
+    throw new Error(`Kein Stammdatensatz für ${label} gefunden.`);
+  }
+  return res.recordset[0][field];
+}
+
+async function getRefDefaults(trx) {
+  if (refDefaultsCache) return refDefaultsCache;
+  const defaults = {
+    Anrede: await fetchSingleValue(
+      trx,
+      'SELECT TOP 1 AnredeID AS value FROM dbo.adrAnreden ORDER BY AnredeID',
+      'value',
+      'adrAnreden.AnredeID'
+    ),
+    Briefanrede: await fetchSingleValue(
+      trx,
+      'SELECT TOP 1 BriefAnredeID AS value FROM dbo.adrBriefanreden ORDER BY BriefAnredeID',
+      'value',
+      'adrBriefanreden.BriefAnredeID'
+    ),
+    Bank: await fetchSingleValue(
+      trx,
+      'SELECT TOP 1 BankID AS value FROM dbo.adrBanken ORDER BY BankID',
+      'value',
+      'adrBanken.BankID'
+    ),
+    ZahlungsKondition: await fetchSingleValue(
+      trx,
+      'SELECT TOP 1 KonditionsNr AS value FROM dbo.adrKonditionen ORDER BY KonditionsNr',
+      'value',
+      'adrKonditionen.KonditionsNr'
+    ),
+    Selekt1: await fetchSingleValue(
+      trx,
+      'SELECT TOP 1 SelektID AS value FROM dbo.adrSelekts ORDER BY SelektID',
+      'value',
+      'adrSelekts.SelektID'
+    ),
+    Selekt2: await fetchSingleValue(
+      trx,
+      'SELECT TOP 1 SelektID AS value FROM dbo.adrSelekts ORDER BY SelektID DESC',
+      'value',
+      'adrSelekts.SelektID'
+    ),
+  };
+  refDefaultsCache = defaults;
+  return defaults;
+}
+
 async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`${baseLabel} fehlt.`);
@@ -388,6 +442,7 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
     data.Ort = ortId;
   }
 
+  const refDefaults = await getRefDefaults(trx);
   const now = new Date();
   const adrMatch = String(data.AdrNrGes).match(/^(.*?)(\d+)$/);
   applyAddressDefaults(data, metaByName, {
@@ -397,17 +452,18 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
     MwStPflicht: 1,
     AdressArt: 0,
     AbteilungsNr: defaults?.abtnr ?? null,
+    Anrede: refDefaults.Anrede,
+    Briefanrede: refDefaults.Briefanrede,
+    Bank: refDefaults.Bank,
     UserErfasst: defaults?.user ?? null,
     DatumErfasst: now,
     UserAenderung: defaults?.user ?? null,
     DatumAenderung: now,
     StrassePstf: data.Strasse ?? null,
     OrtPstf: data.Ort ?? null,
-    Anrede: 0,
-    Briefanrede: 0,
-    Selekt1: 0,
-    Selekt2: 0,
-    ZahlungsKondition: 0,
+    Selekt1: refDefaults.Selekt1,
+    Selekt2: refDefaults.Selekt2,
+    ZahlungsKondition: refDefaults.ZahlungsKondition,
     FibuStatus: 0,
     Waehrung: 'EUR',
   });
