@@ -340,37 +340,11 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   if (String(data.AdrNrGes).length > ADR_NR_MAX) {
     throw new Error(`${baseLabel}.AdrNrGes ist zu lang (max ${ADR_NR_MAX}).`);
   }
-  const now = new Date();
-  applyAddressDefaults(data, metaByName, {
-    MahnSperre: 0,
-    MwStPflicht: 1,
-    AdressArt: 0,
-    AbteilungsNr: defaults?.abtnr ?? null,
-    UserErfasst: defaults?.user ?? null,
-    DatumErfasst: now,
-    UserAenderung: defaults?.user ?? null,
-    DatumAenderung: now,
-    StrassePstf: data.Strasse ?? null,
-    OrtPstf: data.Ort ?? null,
-  });
   const checkReq = new sql.Request(trx);
   checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
   const exists = await checkReq.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes = @AdrNrGes');
   if (exists.recordset.length) {
     return { adrNrGes: data.AdrNrGes, extras };
-  }
-
-  const requiredCols = getRequiredColumns(adrMeta);
-  for (const col of requiredCols) {
-    if (data[col] == null) {
-      throw new Error(`${baseLabel}.${col} fehlt.`);
-    }
-  }
-  if (!data.Name) {
-    throw new Error(`${baseLabel}.Name fehlt.`);
-  }
-  if (!data.Strasse) {
-    throw new Error(`${baseLabel}.Strasse fehlt.`);
   }
 
   let ortId = data.Ort ?? extras.ortId;
@@ -388,6 +362,43 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   }
   if (data.Ort == null) {
     data.Ort = ortId;
+  }
+
+  const now = new Date();
+  const adrMatch = String(data.AdrNrGes).match(/^(.*?)(\d+)$/);
+  applyAddressDefaults(data, metaByName, {
+    AdrNrA: adrMatch ? adrMatch[1] : null,
+    AdrNrN: adrMatch ? Number.parseInt(adrMatch[2], 10) : null,
+    MahnSperre: 0,
+    MwStPflicht: 1,
+    AdressArt: 0,
+    AbteilungsNr: defaults?.abtnr ?? null,
+    UserErfasst: defaults?.user ?? null,
+    DatumErfasst: now,
+    UserAenderung: defaults?.user ?? null,
+    DatumAenderung: now,
+    StrassePstf: data.Strasse ?? null,
+    OrtPstf: data.Ort ?? null,
+    Anrede: 0,
+    Briefanrede: 0,
+    Selekt1: 0,
+    Selekt2: 0,
+    ZahlungsKondition: 0,
+    FibuStatus: 0,
+    Waehrung: 'EUR',
+  });
+
+  const requiredCols = getRequiredColumns(adrMeta);
+  for (const col of requiredCols) {
+    if (data[col] == null) {
+      throw new Error(`${baseLabel}.${col} fehlt.`);
+    }
+  }
+  if (!data.Name) {
+    throw new Error(`${baseLabel}.Name fehlt.`);
+  }
+  if (!data.Strasse) {
+    throw new Error(`${baseLabel}.Strasse fehlt.`);
   }
 
   const columns = Object.keys(data);
