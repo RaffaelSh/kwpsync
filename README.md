@@ -77,16 +77,21 @@ Wir nutzen eine Queue-Tabelle in Supabase. CRM schreibt dort nur ein JSON-Payloa
        "adresse": {
          "adrNrGes": "HIVE2026000001",
          "name": "Mustermann GmbH",
-         "vorname": "Max",
-         "strasse": "Musterstrasse 1",
-         "plz": "46509",
-         "ort": "Musterstadt",
-         "rechnungsmail": "rechnung@example.com"
-       },
-       "rechnungAdresse": { "sameAsAdresse": true },
-       "bauherrAdresse": { "sameAsAdresse": true }
-     }'::jsonb
-   );
+       "vorname": "Max",
+       "strasse": "Musterstrasse 1",
+       "plz": "46509",
+       "ort": "Musterstadt",
+       "rechnungsmail": "rechnung@example.com",
+       "kontakte": {
+         "telefon": "02843-123456",
+         "fax": "02843-654321",
+         "mail": "rechnung@example.com"
+       }
+     },
+     "rechnungAdresse": { "sameAsAdresse": true },
+     "bauherrAdresse": { "sameAsAdresse": true }
+   }'::jsonb
+ );
    ```
 5. Der Worker verarbeitet den Eintrag, schreibt nach MSSQL und setzt `status` auf `done` oder `error`.
    Zusätzlich gibt es ein Polling (alle 30s), falls Realtime/Websocket nicht erreichbar ist.

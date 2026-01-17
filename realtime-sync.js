@@ -342,6 +342,19 @@ function extractAddressExtras(raw) {
   return extras;
 }
 
+function extractKontaktExtras(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const kontakte = raw.kontakte && typeof raw.kontakte === 'object' ? raw.kontakte : {};
+  const telefon = raw.kontaktTelefon ?? kontakte.telefon ?? raw.telefon ?? null;
+  const fax = raw.kontaktFax ?? kontakte.fax ?? raw.fax ?? null;
+  const mail = raw.kontaktMail ?? kontakte.mail ?? raw.mail ?? raw.email ?? null;
+  return {
+    telefon: telefon == null ? null : fitString(telefon, 510, 'kontaktTelefon'),
+    fax: fax == null ? null : fitString(fax, 510, 'kontaktFax'),
+    mail: mail == null ? null : fitString(mail, 510, 'kontaktMail'),
+  };
+}
+
 function applyAddressDefaults(data, metaByName, defaults) {
   for (const [key, value] of Object.entries(defaults)) {
     if (!metaByName.has(key)) continue;
@@ -423,8 +436,25 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
     throw new Error(`${baseLabel} fehlt.`);
   }
   const extras = extractAddressExtras(raw);
+  const kontaktExtras = extractKontaktExtras(raw);
   const { data, metaByName } = mapPayloadToColumns(raw, adrMeta, {
-    allowKeys: ['sameAsAdresse', 'plz', 'ort', 'land', 'plzn', 'ortTyp', 'ortId'],
+    allowKeys: [
+      'sameAsAdresse',
+      'plz',
+      'ort',
+      'land',
+      'plzn',
+      'ortTyp',
+      'ortId',
+      'kontakte',
+      'kontaktTelefon',
+      'kontaktFax',
+      'kontaktMail',
+      'telefon',
+      'fax',
+      'mail',
+      'email',
+    ],
     label: baseLabel,
   });
   if (!data.AdrNrGes) {
@@ -435,7 +465,11 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   }
   const checkReq = new sql.Request(trx);
   checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
-  const exists = await checkReq.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes = @AdrNrGes');
+  const exists = await checkReq.query(`
+    SELECT AdrNrGes, Kontakt1, Kontakt2, Kontakt3
+    FROM dbo.adrAdressen
+    WHERE AdrNrGes = @AdrNrGes
+  `);
   if (exists.recordset.length) {
     return { adrNrGes: data.AdrNrGes, extras };
   }
@@ -517,7 +551,46 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   } catch (err) {
     throw new Error(`${baseLabel} insert failed: ${err.message || err}`);
   }
+
+  const mailFallback = data.RechnungsMail ?? raw.rechnungsmail ?? null;
+  await createStandardKontakte(trx, data.AdrNrGes, {
+    telefon: kontaktExtras.telefon,
+    fax: kontaktExtras.fax,
+    mail: kontaktExtras.mail ?? mailFallback,
+  });
   return { adrNrGes: data.AdrNrGes, extras };
+}
+
+async function createStandardKontakte(trx, adrNrGes, kontakt) {
+  if (!adrNrGes) return;
+  const req = new sql.Request(trx);
+  const maxRes = await req.query(
+    'SELECT ISNULL(MAX(KontaktID), 0) AS MaxId FROM dbo.adrKontakte WITH (TABLOCKX, HOLDLOCK)'
+  );
+  const baseId = maxRes.recordset[0].MaxId || 0;
+
+  const insertReq = new sql.Request(trx);
+  insertReq.input('AdrNrGes', sql.NVarChar(48), adrNrGes);
+  insertReq.input('Kontakt1', sql.Int, baseId + 1);
+  insertReq.input('Kontakt2', sql.Int, baseId + 2);
+  insertReq.input('Kontakt3', sql.Int, baseId + 3);
+  insertReq.input('Telefon', sql.NVarChar(510), kontakt?.telefon ?? null);
+  insertReq.input('Fax', sql.NVarChar(510), kontakt?.fax ?? null);
+  insertReq.input('Mail', sql.NVarChar(510), kontakt?.mail ?? null);
+
+  await insertReq.query(`
+    INSERT INTO dbo.adrKontakte (KontaktID, AdrNrGes, KontaktArt, KontaktName, Kontakt, KontaktArtTyp)
+    VALUES
+      (@Kontakt1, @AdrNrGes, 0, 'Telefon', @Telefon, -1),
+      (@Kontakt2, @AdrNrGes, 1, 'Fax', @Fax, -1),
+      (@Kontakt3, @AdrNrGes, 2, 'Mail', @Mail, -1);
+
+    UPDATE dbo.adrAdressen
+    SET Kontakt1 = @Kontakt1,
+        Kontakt2 = @Kontakt2,
+        Kontakt3 = @Kontakt3
+    WHERE AdrNrGes = @AdrNrGes;
+  `);
 }
 
 async function insertProjektDirect(trx, payload) {
