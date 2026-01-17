@@ -64,6 +64,7 @@ function parsePayload(row) {
   return payload;
 }
 
+const ADR_NR_MAX = 24;
 const ADR_LEGAL_FORMS = new Set([
   'GMBH',
   'MBH',
@@ -102,7 +103,7 @@ async function generateAdrNrGes(trx, address, typeTag) {
   const baseRaw = buildAdrBase(address);
   const suffix = `_${typeTag}`;
   const maxDigits = 4;
-  const maxBaseLen = 48 - suffix.length - maxDigits;
+  const maxBaseLen = ADR_NR_MAX - suffix.length - maxDigits;
   const base = truncateString(baseRaw || 'ADRESSE', maxBaseLen);
   const prefix = `${base}${suffix}`;
   const req = new sql.Request(trx);
@@ -119,8 +120,8 @@ async function generateAdrNrGes(trx, address, typeTag) {
   }
   const nextNum = maxNum + 1;
   let candidate = `${prefix}${nextNum}`;
-  if (candidate.length > 48) {
-    const allowedBaseLen = 48 - suffix.length - String(nextNum).length;
+  if (candidate.length > ADR_NR_MAX) {
+    const allowedBaseLen = ADR_NR_MAX - suffix.length - String(nextNum).length;
     const trimmedBase = truncateString(base, allowedBaseLen);
     candidate = `${trimmedBase}${suffix}${nextNum}`;
   }
@@ -325,6 +326,9 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel) {
   });
   if (!data.AdrNrGes) {
     throw new Error(`${baseLabel}.AdrNrGes fehlt.`);
+  }
+  if (String(data.AdrNrGes).length > ADR_NR_MAX) {
+    throw new Error(`${baseLabel}.AdrNrGes ist zu lang (max ${ADR_NR_MAX}).`);
   }
   const checkReq = new sql.Request(trx);
   checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
