@@ -74,6 +74,7 @@ const toNumber = (v, label) => {
 let adrAdressenColumnsCache = null;
 let projektColumnsCache = null;
 let refDefaultsCache = null;
+let refDefaultsLogged = false;
 
 function parsePayload(row) {
   if (!row) return null;
@@ -399,8 +400,22 @@ async function getRefDefaults(trx) {
       'adrSelekts.SelektID'
     ),
   };
+  if (process.env.KWP_DEBUG_REF_DEFAULTS === '1' && !refDefaultsLogged) {
+    refDefaultsLogged = true;
+    console.log('Ref defaults:', defaults);
+  }
   refDefaultsCache = defaults;
   return defaults;
+}
+
+async function ensureRefExists(trx, table, field, value, label) {
+  if (value == null) return;
+  const req = new sql.Request(trx);
+  req.input('Value', sql.Int, value);
+  const res = await req.query(`SELECT 1 FROM dbo.${table} WHERE ${field} = @Value`);
+  if (!res.recordset.length) {
+    throw new Error(`${label}=${value} nicht in ${table}.${field} gefunden.`);
+  }
 }
 
 async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
@@ -467,6 +482,13 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
     FibuStatus: 0,
     Waehrung: 'EUR',
   });
+
+  await ensureRefExists(trx, 'adrAnreden', 'AnredeID', data.Anrede, `${baseLabel}.anrede`);
+  await ensureRefExists(trx, 'adrBriefanreden', 'BriefAnredeID', data.Briefanrede, `${baseLabel}.briefanrede`);
+  await ensureRefExists(trx, 'adrBanken', 'BankID', data.Bank, `${baseLabel}.bank`);
+  await ensureRefExists(trx, 'adrKonditionen', 'KonditionsNr', data.ZahlungsKondition, `${baseLabel}.zahlungsKondition`);
+  await ensureRefExists(trx, 'adrSelekts', 'SelektID', data.Selekt1, `${baseLabel}.selekt1`);
+  await ensureRefExists(trx, 'adrSelekts', 'SelektID', data.Selekt2, `${baseLabel}.selekt2`);
 
   const requiredCols = getRequiredColumns(adrMeta);
   for (const col of requiredCols) {
