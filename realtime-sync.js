@@ -316,7 +316,16 @@ function extractAddressExtras(raw) {
   return extras;
 }
 
-async function ensureAdresse(trx, adrMeta, raw, baseLabel) {
+function applyAddressDefaults(data, metaByName, defaults) {
+  for (const [key, value] of Object.entries(defaults)) {
+    if (!metaByName.has(key)) continue;
+    if (data[key] != null) continue;
+    const meta = metaByName.get(key);
+    data[key] = normalizeValueForColumn(value, meta);
+  }
+}
+
+async function ensureAdresse(trx, adrMeta, raw, baseLabel, defaults) {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`${baseLabel} fehlt.`);
   }
@@ -331,6 +340,19 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel) {
   if (String(data.AdrNrGes).length > ADR_NR_MAX) {
     throw new Error(`${baseLabel}.AdrNrGes ist zu lang (max ${ADR_NR_MAX}).`);
   }
+  const now = new Date();
+  applyAddressDefaults(data, metaByName, {
+    MahnSperre: 0,
+    MwStPflicht: 1,
+    AdressArt: 0,
+    AbteilungsNr: defaults?.abtnr ?? null,
+    UserErfasst: defaults?.user ?? null,
+    DatumErfasst: now,
+    UserAenderung: defaults?.user ?? null,
+    DatumAenderung: now,
+    StrassePstf: data.Strasse ?? null,
+    OrtPstf: data.Ort ?? null,
+  });
   const checkReq = new sql.Request(trx);
   checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
   const exists = await checkReq.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes = @AdrNrGes');
@@ -416,9 +438,13 @@ async function insertProjektDirect(trx, payload) {
     await ensureAdrNrGes(trx, bauRaw, 'BAUHRADR');
   }
 
-  const projAdrResult = await ensureAdresse(trx, adrMeta, baseRaw, 'adresse');
-  const rechAdrResult = await ensureAdresse(trx, adrMeta, rechRaw, 'rechnungAdresse');
-  const bauAdrResult = await ensureAdresse(trx, adrMeta, bauRaw, 'bauherrAdresse');
+  const defaultUser = projectData.Createuser || projectData.SachBearb || projectData.Edituser || null;
+  const defaultAbtNr = projectData.AbtNr ?? null;
+  const addrDefaults = { user: defaultUser, abtnr: defaultAbtNr };
+
+  const projAdrResult = await ensureAdresse(trx, adrMeta, baseRaw, 'adresse', addrDefaults);
+  const rechAdrResult = await ensureAdresse(trx, adrMeta, rechRaw, 'rechnungAdresse', addrDefaults);
+  const bauAdrResult = await ensureAdresse(trx, adrMeta, bauRaw, 'bauherrAdresse', addrDefaults);
 
   const projAdr = projAdrResult.adrNrGes;
   const rechAdr = rechAdrResult.adrNrGes;
