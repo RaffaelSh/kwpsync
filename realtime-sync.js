@@ -261,6 +261,7 @@ function buildSqlType(meta) {
   if (type === 'real') return sql.Real;
   if (type === 'decimal') return sql.Decimal(meta.precision || 18, meta.scale ?? 0);
   if (type === 'money') return sql.Money;
+  if (type === 'bit') return sql.Bit;
   if (type === 'datetime') return sql.DateTime;
   if (type === 'smalldatetime') return sql.SmallDateTime;
   if (type === 'binary') return sql.Binary(meta.max_length);
