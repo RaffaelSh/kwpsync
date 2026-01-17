@@ -64,11 +64,74 @@ function parsePayload(row) {
   return payload;
 }
 
-function buildAdrKey(base, suffix) {
-  const clean = String(base || '').replace(/\s+/g, '');
-  const suffixPart = suffix ? `_${suffix}` : '';
-  const maxBaseLen = 48 - suffixPart.length;
-  return fitString(clean, maxBaseLen, 'adrNrGes') + suffixPart;
+const ADR_LEGAL_FORMS = new Set([
+  'GMBH',
+  'MBH',
+  'KG',
+  'UG',
+  'AG',
+  'EK',
+  'GMBHCO',
+  'CO',
+]);
+
+function normalizeAdrBase(value) {
+  const raw = String(value || '');
+  const cleaned = raw
+    .replace(/&/g, ' UND ')
+    .replace(/[Ää]/g, 'AE')
+    .replace(/[Öö]/g, 'OE')
+    .replace(/[Üü]/g, 'UE')
+    .replace(/ß/g, 'SS')
+    .replace(/[^A-Za-z0-9]+/g, ' ')
+    .trim()
+    .toUpperCase();
+  if (!cleaned) return '';
+  const tokens = cleaned.split(/\s+/).filter(Boolean);
+  const filtered = tokens.filter((token) => !ADR_LEGAL_FORMS.has(token));
+  return (filtered.length ? filtered : tokens).join('_');
+}
+
+function buildAdrBase(address) {
+  if (!address || typeof address !== 'object') return '';
+  const primary = address.name || address.strasse || address.vorname || '';
+  return normalizeAdrBase(primary);
+}
+
+async function generateAdrNrGes(trx, address, typeTag) {
+  const baseRaw = buildAdrBase(address);
+  const suffix = `_${typeTag}`;
+  const maxDigits = 4;
+  const maxBaseLen = 48 - suffix.length - maxDigits;
+  const base = truncateString(baseRaw || 'ADRESSE', maxBaseLen);
+  const prefix = `${base}${suffix}`;
+  const req = new sql.Request(trx);
+  req.input('Prefix', sql.NVarChar(48), `${prefix}%`);
+  const res = await req.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes LIKE @Prefix');
+  let maxNum = 0;
+  for (const row of res.recordset || []) {
+    const value = row.AdrNrGes || '';
+    if (!value.startsWith(prefix)) continue;
+    const match = value.match(/(\d+)$/);
+    if (!match) continue;
+    const num = Number.parseInt(match[1], 10);
+    if (Number.isFinite(num) && num > maxNum) maxNum = num;
+  }
+  const nextNum = maxNum + 1;
+  let candidate = `${prefix}${nextNum}`;
+  if (candidate.length > 48) {
+    const allowedBaseLen = 48 - suffix.length - String(nextNum).length;
+    const trimmedBase = truncateString(base, allowedBaseLen);
+    candidate = `${trimmedBase}${suffix}${nextNum}`;
+  }
+  return candidate;
+}
+
+async function ensureAdrNrGes(trx, raw, typeTag) {
+  if (!raw || typeof raw !== 'object') return;
+  if (Object.prototype.hasOwnProperty.call(raw, 'AdrNrGes')) return;
+  if (Object.prototype.hasOwnProperty.call(raw, 'adrNrGes')) return;
+  raw.AdrNrGes = await generateAdrNrGes(trx, raw, typeTag);
 }
 
 async function ensureOrt(trx, address) {
@@ -263,6 +326,13 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel) {
   if (!data.AdrNrGes) {
     throw new Error(`${baseLabel}.AdrNrGes fehlt.`);
   }
+  const checkReq = new sql.Request(trx);
+  checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
+  const exists = await checkReq.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes = @AdrNrGes');
+  if (exists.recordset.length) {
+    return { adrNrGes: data.AdrNrGes, extras };
+  }
+
   const requiredCols = getRequiredColumns(adrMeta);
   for (const col of requiredCols) {
     if (data[col] == null) {
@@ -274,13 +344,6 @@ async function ensureAdresse(trx, adrMeta, raw, baseLabel) {
   }
   if (!data.Strasse) {
     throw new Error(`${baseLabel}.Strasse fehlt.`);
-  }
-
-  const checkReq = new sql.Request(trx);
-  checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
-  const exists = await checkReq.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes = @AdrNrGes');
-  if (exists.recordset.length) {
-    return { adrNrGes: data.AdrNrGes, extras };
   }
 
   let ortId = data.Ort ?? extras.ortId;
@@ -331,10 +394,7 @@ async function insertProjektDirect(trx, payload) {
     throw new Error('adresse fehlt.');
   }
 
-  if (!Object.prototype.hasOwnProperty.call(baseRaw, 'adrNrGes') &&
-      !Object.prototype.hasOwnProperty.call(baseRaw, 'AdrNrGes')) {
-    baseRaw.adrNrGes = buildAdrKey(projnr, 'A');
-  }
+  await ensureAdrNrGes(trx, baseRaw, 'PROJADR');
 
   const hasRechnung = payload?.rechnungAdresse && typeof payload.rechnungAdresse === 'object';
   const hasBauherr = payload?.bauherrAdresse && typeof payload.bauherrAdresse === 'object';
@@ -343,6 +403,13 @@ async function insertProjektDirect(trx, payload) {
 
   const rechRaw = rechnungSame ? baseRaw : payload?.rechnungAdresse;
   const bauRaw = bauherrSame ? baseRaw : payload?.bauherrAdresse;
+
+  if (!rechnungSame) {
+    await ensureAdrNrGes(trx, rechRaw, 'RECHADR');
+  }
+  if (!bauherrSame) {
+    await ensureAdrNrGes(trx, bauRaw, 'BAUHRADR');
+  }
 
   const projAdrResult = await ensureAdresse(trx, adrMeta, baseRaw, 'adresse');
   const rechAdrResult = await ensureAdresse(trx, adrMeta, rechRaw, 'rechnungAdresse');
