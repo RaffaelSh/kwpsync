@@ -4,8 +4,6 @@ const { createClient } = require('@supabase/supabase-js');
 
 const QUEUE_SCHEMA = process.env.KWP_QUEUE_SCHEMA || 'public';
 const QUEUE_TABLE = process.env.KWP_QUEUE_TABLE || 'kwp_project_queue';
-const TEMPLATE_PROJNR = (process.env.KWP_TEMPLATE_PROJNR || '').trim() || null;
-const TEMPLATE_ADRNR = (process.env.KWP_TEMPLATE_ADRNR || '').trim() || null;
 const POLL_INTERVAL_MS = Number.parseInt(process.env.KWP_QUEUE_POLL_MS || '30000', 10);
 const POLL_LIMIT = Number.parseInt(process.env.KWP_QUEUE_POLL_LIMIT || '50', 10);
 
@@ -25,19 +23,32 @@ const poolPromise = new sql.ConnectionPool({
   options: { encrypt: false, trustServerCertificate: true },
 }).connect();
 
-const fitString = (v, maxLen) => {
+const fitString = (v, maxLen, label) => {
+  if (v == null || v === '') return null;
+  const s = String(v);
+  if (maxLen && s.length > maxLen) {
+    throw new Error(`${label || 'Wert'} ist zu lang (max ${maxLen}).`);
+  }
+  return s;
+};
+
+const truncateString = (v, maxLen) => {
   if (v == null || v === '') return null;
   const s = String(v);
   return maxLen ? s.slice(0, maxLen) : s;
 };
 
-const toFloat = (v) => {
+const toNumber = (v, label) => {
   if (v == null || v === '') return null;
   const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+  if (!Number.isFinite(n)) {
+    throw new Error(`${label || 'Wert'} ist keine Zahl.`);
+  }
+  return n;
 };
 
 let adrAdressenColumnsCache = null;
+let projektColumnsCache = null;
 
 function parsePayload(row) {
   if (!row) return null;
@@ -56,28 +67,16 @@ function parsePayload(row) {
 function buildAdrKey(base, suffix) {
   const clean = String(base || '').replace(/\s+/g, '');
   const suffixPart = suffix ? `_${suffix}` : '';
-  const maxBaseLen = 24 - suffixPart.length;
-  return fitString(clean, maxBaseLen) + suffixPart;
-}
-
-function normalizeAddress(raw, fallbackKey) {
-  if (!raw || typeof raw !== 'object') return null;
-  return {
-    adrNrGes: fitString(raw.adrNrGes || fallbackKey, 24),
-    name: fitString(raw.name, 100),
-    vorname: fitString(raw.vorname, 100),
-    strasse: fitString(raw.strasse, 80),
-    plz: fitString(raw.plz, 16),
-    ort: fitString(raw.ort, 80),
-    rechnungsmail: fitString(raw.rechnungsmail, 510),
-    land: fitString(raw.land || 'DE', 3),
-  };
+  const maxBaseLen = 48 - suffixPart.length;
+  return fitString(clean, maxBaseLen, 'adrNrGes') + suffixPart;
 }
 
 async function ensureOrt(trx, address) {
   if (!address.plz || !address.ort) {
     throw new Error('Adresse muss PLZ und Ort enthalten.');
   }
+  const plzn = address.plzn || address.plz;
+  const ortTyp = Number.isFinite(address.ortTyp) ? address.ortTyp : 0;
   const request = new sql.Request(trx);
   request.input('Plz', sql.NVarChar(16), address.plz);
   request.input('Ort', sql.NVarChar(80), address.ort);
@@ -94,191 +93,317 @@ async function ensureOrt(trx, address) {
   insertReq.input('OrtID', sql.Int, nextId);
   insertReq.input('Land', sql.NVarChar(3), address.land || 'DE');
   insertReq.input('Plz', sql.NVarChar(16), address.plz);
-  insertReq.input('Plzn', sql.NVarChar(16), address.plz);
+  insertReq.input('Plzn', sql.NVarChar(16), plzn);
   insertReq.input('Ort', sql.NVarChar(80), address.ort);
-  insertReq.input('OrtTyp', sql.Int, 0);
+  insertReq.input('OrtTyp', sql.Int, ortTyp);
   await insertReq.query(
     'INSERT INTO dbo.adrOrte (OrtID, Land, PLZ, PLZN, Ort, OrtTyp) VALUES (@OrtID, @Land, @Plz, @Plzn, @Ort, @OrtTyp)'
   );
   return nextId;
 }
 
-async function getAdrAdressenColumns(trx) {
-  if (adrAdressenColumnsCache) return adrAdressenColumnsCache;
+async function getTableColumns(trx, tableName) {
+  const cache = tableName === 'dbo.adrAdressen' ? adrAdressenColumnsCache : projektColumnsCache;
+  if (cache) return cache;
   const req = new sql.Request(trx);
   const res = await req.query(`
-    SELECT c.name AS column_name, t.name AS data_type, c.is_identity, c.is_computed
+    SELECT
+      c.name AS column_name,
+      t.name AS data_type,
+      c.max_length,
+      c.precision,
+      c.scale,
+      c.is_nullable,
+      c.is_identity,
+      c.is_computed,
+      dc.definition AS default_definition
     FROM sys.columns c
     JOIN sys.types t ON c.user_type_id = t.user_type_id
-    WHERE c.object_id = OBJECT_ID('dbo.adrAdressen')
+    LEFT JOIN sys.default_constraints dc ON c.default_object_id = dc.object_id
+    WHERE c.object_id = OBJECT_ID('${tableName}')
     ORDER BY c.column_id
   `);
-  adrAdressenColumnsCache = res.recordset
-    .filter((row) => !row.is_identity && !row.is_computed)
-    .filter((row) => row.data_type !== 'timestamp')
-    .filter((row) => row.column_name !== 'Offline_Sync_Id')
-    .map((row) => row.column_name);
-  return adrAdressenColumnsCache;
+  const meta = res.recordset;
+  if (tableName === 'dbo.adrAdressen') {
+    adrAdressenColumnsCache = meta;
+  } else if (tableName === 'dbo.Projekt') {
+    projektColumnsCache = meta;
+  }
+  return meta;
 }
 
-async function resolveTemplateAdr(trx) {
-  if (TEMPLATE_ADRNR) return TEMPLATE_ADRNR;
-  const req = new sql.Request(trx);
-  if (TEMPLATE_PROJNR) {
-    req.input('TemplateProjNr', sql.NVarChar(30), TEMPLATE_PROJNR);
-    const res = await req.query('SELECT ProjAdr FROM dbo.Projekt WHERE ProjNr = @TemplateProjNr');
-    if (res.recordset.length) return res.recordset[0].ProjAdr;
+function buildColumnMaps(columns) {
+  const byLower = new Map();
+  const metaByName = new Map();
+  for (const col of columns) {
+    const name = col.column_name;
+    byLower.set(name.toLowerCase(), name);
+    metaByName.set(name, col);
   }
-  const res = await req.query('SELECT TOP 1 ProjAdr FROM dbo.Projekt ORDER BY Createdate DESC');
-  if (res.recordset.length) return res.recordset[0].ProjAdr;
-  return null;
+  return { byLower, metaByName };
 }
 
-async function ensureAdresse(trx, address) {
-  if (!address?.adrNrGes) {
-    throw new Error('AdrNrGes fehlt.');
+function isInsertableColumn(meta) {
+  if (!meta) return false;
+  if (meta.is_identity || meta.is_computed) return false;
+  if (meta.data_type === 'timestamp') return false;
+  if (meta.column_name === 'Offline_Sync_Id') return false;
+  return true;
+}
+
+function getRequiredColumns(columns) {
+  return columns
+    .filter((col) => isInsertableColumn(col))
+    .filter((col) => !col.is_nullable && !col.default_definition)
+    .map((col) => col.column_name);
+}
+
+function normalizeValueForColumn(value, meta) {
+  if (value == null) return null;
+  const type = meta.data_type.toLowerCase();
+  if (type === 'nvarchar' || type === 'varchar' || type === 'nchar' || type === 'char') {
+    const maxLen = meta.max_length === -1 ? null : type.startsWith('n') ? meta.max_length / 2 : meta.max_length;
+    return fitString(value, maxLen, meta.column_name);
   }
-  const ortId = await ensureOrt(trx, address);
+  if (type === 'int' || type === 'smallint' || type === 'tinyint' || type === 'bigint') {
+    return toNumber(value, meta.column_name);
+  }
+  if (type === 'float' || type === 'real' || type === 'decimal' || type === 'money') {
+    return toNumber(value, meta.column_name);
+  }
+  if (type === 'bit') {
+    if (value === true || value === false) return value ? 1 : 0;
+    const n = toNumber(value, meta.column_name);
+    return n ? 1 : 0;
+  }
+  return value;
+}
+
+function buildSqlType(meta) {
+  const type = meta.data_type.toLowerCase();
+  if (type === 'nvarchar') {
+    return meta.max_length === -1 ? sql.NVarChar(sql.MAX) : sql.NVarChar(meta.max_length / 2);
+  }
+  if (type === 'varchar') {
+    return meta.max_length === -1 ? sql.VarChar(sql.MAX) : sql.VarChar(meta.max_length);
+  }
+  if (type === 'nchar') return sql.NChar(meta.max_length / 2);
+  if (type === 'char') return sql.Char(meta.max_length);
+  if (type === 'int') return sql.Int;
+  if (type === 'smallint') return sql.SmallInt;
+  if (type === 'tinyint') return sql.TinyInt;
+  if (type === 'bigint') return sql.BigInt;
+  if (type === 'float') return sql.Float;
+  if (type === 'real') return sql.Real;
+  if (type === 'decimal') return sql.Decimal(meta.precision || 18, meta.scale ?? 0);
+  if (type === 'money') return sql.Money;
+  if (type === 'datetime') return sql.DateTime;
+  if (type === 'smalldatetime') return sql.SmallDateTime;
+  if (type === 'binary') return sql.Binary(meta.max_length);
+  if (type === 'varbinary') return sql.VarBinary(meta.max_length);
+  return sql.NVarChar(sql.MAX);
+}
+
+function splitProjectPayload(payload) {
+  const reserved = new Set(['adresse', 'rechnungAdresse', 'bauherrAdresse', 'projekt']);
+  const rootProject = {};
+  for (const [key, value] of Object.entries(payload || {})) {
+    if (reserved.has(key)) continue;
+    rootProject[key] = value;
+  }
+  if (payload?.projekt && Object.keys(rootProject).length) {
+    throw new Error('Nutze entweder "projekt" ODER Root-Felder, nicht beides.');
+  }
+  return payload?.projekt && typeof payload.projekt === 'object' ? payload.projekt : rootProject;
+}
+
+function mapPayloadToColumns(raw, columns, options = {}) {
+  const { allowKeys = [], label = 'payload' } = options;
+  const { byLower, metaByName } = buildColumnMaps(columns);
+  const data = {};
+  for (const [key, value] of Object.entries(raw || {})) {
+    if (allowKeys.includes(key)) continue;
+    const columnName = byLower.get(key.toLowerCase());
+    if (!columnName) {
+      throw new Error(`Unbekanntes Feld in ${label}: ${key}`);
+    }
+    const meta = metaByName.get(columnName);
+    if (!isInsertableColumn(meta)) {
+      throw new Error(`Feld nicht schreibbar in ${label}: ${columnName}`);
+    }
+    data[columnName] = normalizeValueForColumn(value, meta);
+  }
+  return { data, metaByName };
+}
+
+function extractAddressExtras(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const extras = {};
+  if (Object.prototype.hasOwnProperty.call(raw, 'sameAsAdresse')) {
+    extras.sameAsAdresse = raw.sameAsAdresse !== false;
+  }
+  if (Object.prototype.hasOwnProperty.call(raw, 'plz')) extras.plz = fitString(raw.plz, 16, 'plz');
+  if (Object.prototype.hasOwnProperty.call(raw, 'ort')) extras.ort = fitString(raw.ort, 80, 'ort');
+  if (Object.prototype.hasOwnProperty.call(raw, 'land')) extras.land = fitString(raw.land, 3, 'land');
+  if (Object.prototype.hasOwnProperty.call(raw, 'plzn')) extras.plzn = fitString(raw.plzn, 16, 'plzn');
+  if (Object.prototype.hasOwnProperty.call(raw, 'ortTyp')) extras.ortTyp = toNumber(raw.ortTyp, 'ortTyp');
+  if (Object.prototype.hasOwnProperty.call(raw, 'ortId')) extras.ortId = toNumber(raw.ortId, 'ortId');
+  return extras;
+}
+
+async function ensureAdresse(trx, adrMeta, raw, baseLabel) {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error(`${baseLabel} fehlt.`);
+  }
+  const extras = extractAddressExtras(raw);
+  const { data, metaByName } = mapPayloadToColumns(raw, adrMeta, {
+    allowKeys: ['sameAsAdresse', 'plz', 'ort', 'land', 'plzn', 'ortTyp', 'ortId'],
+    label: baseLabel,
+  });
+  if (!data.AdrNrGes) {
+    throw new Error(`${baseLabel}.AdrNrGes fehlt.`);
+  }
+  const requiredCols = getRequiredColumns(adrMeta);
+  for (const col of requiredCols) {
+    if (data[col] == null) {
+      throw new Error(`${baseLabel}.${col} fehlt.`);
+    }
+  }
+  if (!data.Name) {
+    throw new Error(`${baseLabel}.Name fehlt.`);
+  }
+  if (!data.Strasse) {
+    throw new Error(`${baseLabel}.Strasse fehlt.`);
+  }
+
   const checkReq = new sql.Request(trx);
-  checkReq.input('AdrNrGes', sql.NVarChar(24), address.adrNrGes);
+  checkReq.input('AdrNrGes', sql.NVarChar(48), data.AdrNrGes);
   const exists = await checkReq.query('SELECT AdrNrGes FROM dbo.adrAdressen WHERE AdrNrGes = @AdrNrGes');
   if (exists.recordset.length) {
-    return address.adrNrGes;
+    return { adrNrGes: data.AdrNrGes, extras };
   }
-  const templateAdr = await resolveTemplateAdr(trx);
-  if (!templateAdr) {
-    throw new Error('Keine Template-Adresse gefunden. Setze KWP_TEMPLATE_ADRNR.');
-  }
-  const columns = await getAdrAdressenColumns(trx);
-  const columnList = columns.map((col) => `[${col}]`).join(', ');
-  const selectList = columns
-    .map((col) => {
-      if (col === 'AdrNrGes') return '@AdrNrGes';
-      if (col === 'Name') return 'COALESCE(@Name, [Name])';
-      if (col === 'Vorname') return 'COALESCE(@Vorname, [Vorname])';
-      if (col === 'Strasse') return 'COALESCE(@Strasse, [Strasse])';
-      if (col === 'Ort') return 'COALESCE(@Ort, [Ort])';
-      if (col === 'RechnungsMail') return 'COALESCE(@RechnungsMail, [RechnungsMail])';
-      return `[${col}]`;
-    })
-    .join(', ');
 
+  let ortId = data.Ort ?? extras.ortId;
+  if (ortId == null) {
+    if (!extras.plz || !extras.ort) {
+      throw new Error(`${baseLabel} braucht plz + ort oder ortId.`);
+    }
+    ortId = await ensureOrt(trx, {
+      plz: extras.plz,
+      ort: extras.ort,
+      land: extras.land,
+      plzn: extras.plzn,
+      ortTyp: extras.ortTyp,
+    });
+  }
+  if (data.Ort == null) {
+    data.Ort = ortId;
+  }
+
+  const columns = Object.keys(data);
   const insertReq = new sql.Request(trx);
-  insertReq.input('AdrNrGes', sql.NVarChar(24), address.adrNrGes);
-  insertReq.input('Name', sql.NVarChar(100), address.name);
-  insertReq.input('Vorname', sql.NVarChar(100), address.vorname);
-  insertReq.input('Strasse', sql.NVarChar(80), address.strasse);
-  insertReq.input('Ort', sql.Int, ortId);
-  insertReq.input('RechnungsMail', sql.NVarChar(510), address.rechnungsmail);
-  insertReq.input('TemplateAdr', sql.NVarChar(24), templateAdr);
-
-  const insertSql = `INSERT INTO dbo.adrAdressen (${columnList}) SELECT ${selectList} FROM dbo.adrAdressen WHERE AdrNrGes = @TemplateAdr;`;
-  const result = await insertReq.query(insertSql);
-  if (result.rowsAffected[0] !== 1) {
-    throw new Error(`Template-Adresse ${templateAdr} nicht gefunden.`);
+  for (const col of columns) {
+    const meta = metaByName.get(col);
+    insertReq.input(col, buildSqlType(meta), data[col]);
   }
-  return address.adrNrGes;
+  const columnList = columns.map((col) => `[${col}]`).join(', ');
+  const valueList = columns.map((col) => `@${col}`).join(', ');
+  const insertSql = `INSERT INTO dbo.adrAdressen (${columnList}) VALUES (${valueList});`;
+  await insertReq.query(insertSql);
+  return { adrNrGes: data.AdrNrGes, extras };
 }
 
-async function insertProjektFromTemplate(trx, payload) {
-  const projnr = fitString(payload.projnr, 30);
-  if (!projnr) throw new Error('projnr fehlt.');
+async function insertProjektDirect(trx, payload) {
+  const projektMeta = await getTableColumns(trx, 'dbo.Projekt');
+  const adrMeta = await getTableColumns(trx, 'dbo.adrAdressen');
+  const projectRaw = splitProjectPayload(payload);
+  const { data: projectData, metaByName: projectMetaMap } = mapPayloadToColumns(projectRaw, projektMeta, {
+    label: 'projekt',
+  });
 
-  const baseKey = payload.adresse?.adrNrGes || buildAdrKey(projnr, 'A');
-  const baseAddress = normalizeAddress(payload.adresse, baseKey);
-  if (!baseAddress?.name || !baseAddress?.strasse || !baseAddress?.plz || !baseAddress?.ort) {
-    throw new Error('adresse (name, strasse, plz, ort) fehlt.');
+  const projnr = projectData.ProjNr || projectData.ProjNr === 0 ? projectData.ProjNr : null;
+  if (!projnr) {
+    throw new Error('projnr fehlt.');
   }
 
-  const rechnungSame = payload.rechnungAdresse?.sameAsAdresse !== false;
-  const bauherrSame = payload.bauherrAdresse?.sameAsAdresse !== false;
+  const baseRaw = payload?.adresse;
+  if (!baseRaw) {
+    throw new Error('adresse fehlt.');
+  }
 
-  const rechnungAddress = rechnungSame
-    ? baseAddress
-    : normalizeAddress(payload.rechnungAdresse, buildAdrKey(baseKey, 'R'));
-  const bauherrAddress = bauherrSame
-    ? baseAddress
-    : normalizeAddress(payload.bauherrAdresse, buildAdrKey(baseKey, 'B'));
+  if (!Object.prototype.hasOwnProperty.call(baseRaw, 'adrNrGes') &&
+      !Object.prototype.hasOwnProperty.call(baseRaw, 'AdrNrGes')) {
+    baseRaw.adrNrGes = buildAdrKey(projnr, 'A');
+  }
 
-  const poolRequest = new sql.Request(trx);
-  poolRequest.input('ProjNr', sql.NVarChar(30), projnr);
-  const exists = await poolRequest.query('SELECT 1 FROM dbo.Projekt WHERE ProjNr = @ProjNr');
+  const hasRechnung = payload?.rechnungAdresse && typeof payload.rechnungAdresse === 'object';
+  const hasBauherr = payload?.bauherrAdresse && typeof payload.bauherrAdresse === 'object';
+  const rechnungSame = !hasRechnung ? true : payload.rechnungAdresse.sameAsAdresse === true;
+  const bauherrSame = !hasBauherr ? true : payload.bauherrAdresse.sameAsAdresse === true;
+
+  const rechRaw = rechnungSame ? baseRaw : payload?.rechnungAdresse;
+  const bauRaw = bauherrSame ? baseRaw : payload?.bauherrAdresse;
+
+  const projAdrResult = await ensureAdresse(trx, adrMeta, baseRaw, 'adresse');
+  const rechAdrResult = await ensureAdresse(trx, adrMeta, rechRaw, 'rechnungAdresse');
+  const bauAdrResult = await ensureAdresse(trx, adrMeta, bauRaw, 'bauherrAdresse');
+
+  const projAdr = projAdrResult.adrNrGes;
+  const rechAdr = rechAdrResult.adrNrGes;
+  const bauAdr = bauAdrResult.adrNrGes;
+
+  if (projectData.ProjAdr && projectData.ProjAdr !== projAdr) {
+    throw new Error('ProjAdr passt nicht zur adresse.AdrNrGes.');
+  }
+  if (projectData.RechAdr && projectData.RechAdr !== rechAdr) {
+    throw new Error('RechAdr passt nicht zur rechnungAdresse.AdrNrGes.');
+  }
+  if (projectData.BauHrAdr && projectData.BauHrAdr !== bauAdr) {
+    throw new Error('BauHrAdr passt nicht zur bauherrAdresse.AdrNrGes.');
+  }
+
+  projectData.ProjAdr = projAdr;
+  projectData.RechAdr = rechAdr;
+  projectData.BauHrAdr = bauAdr;
+
+  if (!Object.prototype.hasOwnProperty.call(projectData, 'Createdate')) {
+    projectData.Createdate = new Date();
+  }
+  if (!Object.prototype.hasOwnProperty.call(projectData, 'Editdate')) {
+    projectData.Editdate = new Date();
+  }
+  if (!Object.prototype.hasOwnProperty.call(projectData, 'ProjAnlage')) {
+    projectData.ProjAnlage = new Date();
+  }
+  if (!Object.prototype.hasOwnProperty.call(projectData, 'AuftragsDatum')) {
+    projectData.AuftragsDatum = new Date();
+  }
+
+  const requiredProj = getRequiredColumns(projektMeta);
+  for (const col of requiredProj) {
+    if (projectData[col] == null) {
+      throw new Error(`projekt.${col} fehlt.`);
+    }
+  }
+
+  const checkReq = new sql.Request(trx);
+  checkReq.input('ProjNr', sql.NVarChar(30), projectData.ProjNr);
+  const exists = await checkReq.query('SELECT 1 FROM dbo.Projekt WHERE ProjNr = @ProjNr');
   if (exists.recordset.length) {
-    return { status: 'exists', projnr };
+    return { status: 'exists', projnr: projectData.ProjNr };
   }
 
-  const projAdr = await ensureAdresse(trx, baseAddress);
-  const rechAdr = await ensureAdresse(trx, rechnungAddress || baseAddress);
-  const bauAdr = await ensureAdresse(trx, bauherrAddress || baseAddress);
-
-  const now = new Date();
-  const sachbearb = fitString(payload.sachbearb, 40);
-  const abtnr = toFloat(payload.abtnr);
-  const auftragStatus = payload.auftragStatus != null ? Number(payload.auftragStatus) : null;
-
+  const columns = Object.keys(projectData);
   const insertReq = new sql.Request(trx);
-  insertReq.input('ProjNr', sql.NVarChar(30), projnr);
-  insertReq.input('ProjBezeichnung', sql.NVarChar(sql.MAX), payload.projbezeichnung ?? null);
-  insertReq.input('ProjAdr', sql.NVarChar(24), projAdr);
-  insertReq.input('RechAdr', sql.NVarChar(24), rechAdr);
-  insertReq.input('BauHrAdr', sql.NVarChar(24), bauAdr);
-  insertReq.input('ArchAdr', sql.NVarChar(24), null);
-  insertReq.input('Now', sql.SmallDateTime, now);
-  insertReq.input('AbtNr', sql.Float, abtnr);
-  insertReq.input('SachBearb', sql.NVarChar(40), sachbearb);
-  insertReq.input('AuftragStatus', sql.SmallInt, auftragStatus);
-  insertReq.input('CreateUser', sql.NVarChar(16), fitString(payload.createuser || sachbearb, 16));
-  insertReq.input('EditUser', sql.NVarChar(16), fitString(payload.edituser || sachbearb, 16));
-  if (TEMPLATE_PROJNR) {
-    insertReq.input('TemplateProjNr', sql.NVarChar(30), TEMPLATE_PROJNR);
+  for (const col of columns) {
+    const meta = projectMetaMap.get(col);
+    insertReq.input(col, buildSqlType(meta), projectData[col]);
   }
-
-  const templateWhere = TEMPLATE_PROJNR
-    ? 'WHERE ProjNr = @TemplateProjNr'
-    : 'ORDER BY Createdate DESC';
-
-  const insertSql = `
-    INSERT INTO dbo.Projekt (
-      ProjNr, ProjAnlage, ProjAdr, RechAdr, ArchAdr, BauHrAdr,
-      KoArt, RohstPr, LohnVorg, VerarbVoreinst, Sperrvermerk,
-      Beginn, FertigStellung, AuftragStatus, CheckDate, AbtNr, Waehrung, AuftragsNr, SachBearb,
-      CheckOut, eCheck, doPosition, doAufmass, doBstLager, doPosMat, upsize_ts,
-      FestPreis, FestPreisMaterial, FestPreisLohn, Info1, Info2, Info3, MittelLohn, SubProjekt,
-      Auftraggeber, Kategorie, AuftragsDatum, AuftragsSumme, AAuftragStatus, BAuftragStatus,
-      Vertrieb, Passwort, SymbolIndex, Direktlieferung,
-      Benutzer1, Benutzer2, Benutzer3, Benutzer4, Benutzer5, Benutzer6, Benutzer7, Benutzer8, Benutzer9, Benutzer10,
-      Submissionsdatum, Fertigstellungsgrad, Version, Nachlass, NachlassProzent, NachlassPauschal,
-      Createuser, Createdate, Edituser, Editdate,
-      Gemeinkosten, Ansprechpartner, GrundlageSE, ProzentSE, Qualifikation, ProjBezeichnung, KonvertierungsFlag,
-      fkAnsprechpartnerIDProjAdr, fkAnsprechpartnerIDRechAdr, fkAnsprechpartnerIDBauhAdr, fkAnsprechpartnerIDArchAdr,
-      AnlagenNr, IgnoreProjektampel, GrundlageSEAZ, ProzentSEAZ, SteuerSchl, Handelsspannenkalkulation,
-      EndberechnungenIstNettosumme, KalkulationEinstellungen
-    )
-    SELECT TOP 1
-      @ProjNr, @Now, @ProjAdr, @RechAdr, @ArchAdr, @BauHrAdr,
-      KoArt, RohstPr, LohnVorg, VerarbVoreinst, Sperrvermerk,
-      Beginn, FertigStellung, COALESCE(@AuftragStatus, AuftragStatus), @Now, COALESCE(@AbtNr, AbtNr), Waehrung, AuftragsNr,
-      COALESCE(@SachBearb, SachBearb),
-      CheckOut, eCheck, doPosition, doAufmass, doBstLager, doPosMat, upsize_ts,
-      FestPreis, FestPreisMaterial, FestPreisLohn, Info1, Info2, Info3, MittelLohn, SubProjekt,
-      Auftraggeber, Kategorie, AuftragsDatum, AuftragsSumme, AAuftragStatus, BAuftragStatus,
-      Vertrieb, Passwort, SymbolIndex, Direktlieferung,
-      Benutzer1, Benutzer2, Benutzer3, Benutzer4, Benutzer5, Benutzer6, Benutzer7, Benutzer8, Benutzer9, Benutzer10,
-      Submissionsdatum, Fertigstellungsgrad, Version, Nachlass, NachlassProzent, NachlassPauschal,
-      COALESCE(@CreateUser, @SachBearb, Createuser), @Now, COALESCE(@EditUser, @SachBearb, Edituser), @Now,
-      Gemeinkosten, Ansprechpartner, GrundlageSE, ProzentSE, Qualifikation, @ProjBezeichnung, KonvertierungsFlag,
-      -1, -1, -1, -1,
-      AnlagenNr, IgnoreProjektampel, GrundlageSEAZ, ProzentSEAZ, SteuerSchl, Handelsspannenkalkulation,
-      EndberechnungenIstNettosumme, KalkulationEinstellungen
-    FROM dbo.Projekt
-    ${templateWhere};
-  `;
-
-  const result = await insertReq.query(insertSql);
-  if (result.rowsAffected[0] !== 1) {
-    throw new Error('Template-Projekt nicht gefunden oder Insert fehlgeschlagen.');
-  }
-  return { status: 'inserted', projnr };
+  const columnList = columns.map((col) => `[${col}]`).join(', ');
+  const valueList = columns.map((col) => `@${col}`).join(', ');
+  const insertSql = `INSERT INTO dbo.Projekt (${columnList}) VALUES (${valueList});`;
+  await insertReq.query(insertSql);
+  return { status: 'inserted', projnr: projectData.ProjNr };
 }
 
 const queue = [];
@@ -311,7 +436,7 @@ async function handleQueueItem(row) {
   const trx = new sql.Transaction(pool);
   try {
     await trx.begin();
-    const result = await insertProjektFromTemplate(trx, payload);
+    const result = await insertProjektDirect(trx, payload);
     await trx.commit();
     await updateQueueRow(id, {
       status: 'done',
@@ -328,7 +453,7 @@ async function handleQueueItem(row) {
     await updateQueueRow(id, {
       status: 'error',
       processed_at: new Date().toISOString(),
-      error: fitString(err.message || String(err), 2000),
+      error: truncateString(err.message || String(err), 2000),
     });
     console.error('Queue processing error:', err);
   } finally {
