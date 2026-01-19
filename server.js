@@ -1,6 +1,8 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const sql = require('mssql');
+const swaggerUiDist = require('swagger-ui-dist');
 const { createClient } = require('@supabase/supabase-js');
 
 // --- Config ---
@@ -176,6 +178,15 @@ async function upsertToMSSQL(items) {
 // --- API ---
 const app = express();
 app.use(express.json({ limit: '5mb' }));
+
+const swaggerUiPath = swaggerUiDist.getAbsoluteFSPath();
+app.use('/docs-assets', express.static(swaggerUiPath));
+app.get(['/docs', '/docs/'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'swagger-ui.html'));
+});
+app.get('/openapi.json', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'openapi.json'));
+});
 
 app.post('/sync/pull', async (_req, res) => {
   try { res.json({ ok: true, count: await syncToSupabase() }); }

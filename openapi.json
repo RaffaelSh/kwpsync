@@ -1,0 +1,7512 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "KWP Wartungswesen API (reverse-engineered)",
+    "version": "0.1.0",
+    "description": "Auto-generated from client connector/DTOs. Required fields inferred from nullability in DTOs."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "AdresszuordnungChangeTyp": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "x-kwp-enum-names": [
+          "Rolle",
+          "Adresse",
+          "Primaer",
+          "Neuanlage"
+        ]
+      },
+      "Anlagenart": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "x-kwp-enum-names": [
+          "Rahmen",
+          "Gruppe",
+          "Anlage",
+          "Keine"
+        ]
+      },
+      "Auftragsart": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "x-kwp-enum-names": [
+          "Montageauftrag",
+          "Zeitmeldung",
+          "Tagesberichte",
+          "Aufmass",
+          "Zeiterfassung"
+        ]
+      },
+      "Druckumfang": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "Keine",
+          "Alle",
+          "VonBis"
+        ]
+      },
+      "DtoAbteilung": {
+        "type": "object",
+        "properties": {
+          "AbtNr": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Bezeichnung": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "AbtNr"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAdresse": {
+        "type": "object",
+        "properties": {
+          "AdrNrGes": {
+            "type": "string"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "Vorname": {
+            "type": "string",
+            "nullable": true
+          },
+          "Zusatz": {
+            "type": "string",
+            "nullable": true
+          },
+          "Strasse": {
+            "type": "string",
+            "nullable": true
+          },
+          "StrassePstf": {
+            "type": "string",
+            "nullable": true
+          },
+          "DebitKreditNr": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Ort": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoOrt"
+              }
+            ],
+            "nullable": true
+          },
+          "Sperrvermerk": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "Neutral",
+              "Warnung",
+              "Gesperrt"
+            ]
+          },
+          "SperrvermerkText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "AdrNrGes",
+          "Sperrvermerk"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAdresseKomplett": {
+        "type": "object",
+        "properties": {
+          "Kontakte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoKontakt"
+            }
+          },
+          "Ansprechpartner": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoAnsprechpartner"
+            }
+          }
+        },
+        "required": [
+          "Kontakte",
+          "Ansprechpartner"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAdresszuordnung": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "AnlagenNr": {
+            "type": "string"
+          },
+          "Anlagenart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          },
+          "Adresse": {
+            "$ref": "#/components/schemas/DtoAdresse"
+          },
+          "Rolle": {
+            "$ref": "#/components/schemas/DtoAdresszuordnungArt"
+          },
+          "Primaer": {
+            "type": "boolean"
+          },
+          "AnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "Ansprechpartner": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAnsprechpartnerBase"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "AnlagenNr",
+          "Anlagenart",
+          "Adresse",
+          "Rolle",
+          "Primaer"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAdresszuordnungArt": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Rolle": {
+            "type": "string"
+          },
+          "StandardRolle": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "Rolle",
+          "StandardRolle"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAdresszuordnungChangeAction": {
+        "type": "object",
+        "properties": {
+          "Typ": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rolle",
+              "Adresse",
+              "Primaer",
+              "Neuanlage"
+            ]
+          },
+          "Parameter": {
+            "$ref": "#/components/schemas/DtoAdresszuordnungChangeParameter"
+          }
+        },
+        "required": [
+          "Typ",
+          "Parameter"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAdresszuordnungChangeParameter": {
+        "type": "object",
+        "properties": {
+          "Adresse": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresse"
+              }
+            ],
+            "nullable": true
+          },
+          "AdressePrevious": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresse"
+              }
+            ],
+            "nullable": true
+          },
+          "Ansprechpartner": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAnsprechpartnerBase"
+              }
+            ],
+            "nullable": true
+          },
+          "AnsprechpartnerPrevious": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAnsprechpartnerBase"
+              }
+            ],
+            "nullable": true
+          },
+          "AnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "AnsprechpartnerIdPrevious": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "Rolle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresszuordnungArt"
+              }
+            ],
+            "nullable": true
+          },
+          "RollePrevious": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresszuordnungArt"
+              }
+            ],
+            "nullable": true
+          },
+          "Primaer": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ZuordnungNeuanlage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresszuordnung"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "DtoAnlage": {
+        "type": "object",
+        "properties": {
+          "Brennstoffart": {
+            "type": "string"
+          },
+          "KeyGruppenanlage": {
+            "type": "string",
+            "nullable": true
+          },
+          "Bilder": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoAnlagenBild"
+            },
+            "nullable": true
+          },
+          "Projekte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoAnlagenProjekt"
+            },
+            "nullable": true
+          },
+          "NaechsteWartungFaelligAm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "NaechsteWartungInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "NaechsterEinsatzInfos": {
+            "type": "string",
+            "nullable": true
+          },
+          "NaechsterEinsatzAusfuehrenBei": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Brennstoffart"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAnlageInfo": {
+        "type": "object",
+        "properties": {
+          "Anlagennummer": {
+            "type": "string"
+          },
+          "Anlagenart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          }
+        },
+        "required": [
+          "Anlagennummer",
+          "Anlagenart"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAnlageIntervall": {
+        "type": "object",
+        "properties": {
+          "Bezeichnung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AdresseAnlageKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AdresseAnlage": {
+            "$ref": "#/components/schemas/DtoAdresse"
+          },
+          "AdresseRechnungKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AdresseHausmeisterKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AdresseHausverwalterKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "Selekt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "AdresseAnlage"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAnlagenBild": {
+        "type": "object",
+        "properties": {}
+      },
+      "DtoAnlagenProjekt": {
+        "type": "object",
+        "properties": {
+          "ProjAnlage": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "AbtNr": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "KategorieKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "Vertrieb": {
+            "type": "string",
+            "nullable": true
+          },
+          "SachBearb": {
+            "type": "string",
+            "nullable": true
+          },
+          "AuftragStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "AnlagenNummer": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "AbtNr"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAnrede": {
+        "type": "object",
+        "properties": {
+          "AnredeId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Anrede": {
+            "type": "string",
+            "nullable": true
+          },
+          "BriefAnredeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "AnredeId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAnsprechpartner": {
+        "type": "object",
+        "properties": {
+          "AnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Anrede": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAnrede"
+              }
+            ],
+            "nullable": true
+          },
+          "Zusatz": {
+            "type": "string",
+            "nullable": true
+          },
+          "Bemerkung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Geburtstag": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "BenutzerFeld1": {
+            "type": "string",
+            "nullable": true
+          },
+          "BenutzerFeld2": {
+            "type": "string",
+            "nullable": true
+          },
+          "BenutzerFeld3": {
+            "type": "string",
+            "nullable": true
+          },
+          "BenutzerFeld4": {
+            "type": "string",
+            "nullable": true
+          },
+          "BenutzerFeld5": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kontakte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoKontakt"
+            },
+            "nullable": true
+          }
+        },
+        "required": [
+          "AnsprechpartnerId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoAnsprechpartnerBase": {
+        "type": "object",
+        "properties": {
+          "Nachname": {
+            "type": "string",
+            "nullable": true
+          },
+          "Vorname": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "DtoAuftrag": {
+        "type": "object",
+        "properties": {
+          "Wartungsauftragsnummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenNummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "ProjBezeichnung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Abteilungsnummer": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ExterneAuftragsnr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Sachbearbeiter": {
+            "type": "string",
+            "nullable": true
+          },
+          "ZuProjNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Auftraggeber": {
+            "type": "string",
+            "nullable": true
+          },
+          "Info1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Info2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Info3": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kategorie": {
+            "type": "string",
+            "nullable": true
+          },
+          "StatusKey": {
+            "type": "string"
+          },
+          "RechnungsNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "RechnungGedruckt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Qualifikation": {
+            "type": "string",
+            "nullable": true
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "RechnungsAdresse": {
+            "type": "string",
+            "nullable": true
+          },
+          "LieferAdresse": {
+            "type": "string",
+            "nullable": true
+          },
+          "KommissionsAdresse": {
+            "type": "string",
+            "nullable": true
+          },
+          "Anlagenart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          },
+          "Herkunft": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "Manuell",
+              "Intervall",
+              "Vertrag"
+            ],
+            "nullable": true
+          },
+          "Herkunftsart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1
+            ],
+            "x-kwp-enum-names": [
+              "Manuell",
+              "AutomatischeDrucke"
+            ]
+          },
+          "HerkunftId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "HerkunftInfos": {
+            "type": "string",
+            "nullable": true
+          },
+          "PlanStunden": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "DruckeVertragsPauschale": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "EbeneId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Benutzerfeld1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld3": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld4": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld5": {
+            "type": "string",
+            "nullable": true
+          },
+          "InfoFuerMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "Detailbeschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerLeistungstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "Nachunternehmer": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "Kondition": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Sammelrechnungsnummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "Preiskennzeichen": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "x-kwp-enum-names": [
+              "AllgeimeineKalkulationsDaten",
+              "VkPreis1",
+              "VkPreis2",
+              "VkPreis3",
+              "Bruttopreis",
+              "AdressbezogeneKalkulationsDaten"
+            ],
+            "nullable": true
+          },
+          "NachunternehmerAdrKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerKonditionstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "IntervallAusfuehrungDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LieferAdressAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "RechnungAdressAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "EbeneBezeichnung": {
+            "type": "string",
+            "nullable": true
+          },
+          "KommissionAdressAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Abteilungsnummer",
+          "StatusKey",
+          "ErfasstDatum",
+          "Anlagenart",
+          "Herkunftsart"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoBlockartikel": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IntervallId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Schluessel": {
+            "type": "string",
+            "nullable": true
+          },
+          "Menge": {
+            "type": "number",
+            "format": "double"
+          },
+          "Kurztext1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kurztext2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Mengeneinheit": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kostenart": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "IntervallId",
+          "Menge",
+          "Kostenart",
+          "ErfasstDatum"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoCoreLookups": {
+        "type": "object",
+        "properties": {
+          "Rechte": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "Rechte"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoCoreSetup": {
+        "type": "object",
+        "properties": {
+          "Lookups": {
+            "$ref": "#/components/schemas/DtoCoreLookups"
+          },
+          "Rechte": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "required": [
+          "Lookups",
+          "Rechte"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeoLocation": {
+        "type": "object",
+        "properties": {
+          "Longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "Latitude": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "Longitude",
+          "Latitude"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeraet": {
+        "type": "object",
+        "properties": {
+          "GeraeteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "AnlagenNummer": {
+            "type": "string"
+          },
+          "Artikel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoGeraetArtikel"
+            }
+          },
+          "EbeneId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "GruppeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Ebene": {
+            "$ref": "#/components/schemas/DtoGeraetEbene"
+          },
+          "Gruppe": {
+            "$ref": "#/components/schemas/DtoGeraetGruppe"
+          },
+          "NichtKonvertierbar": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "GeraeteId",
+          "AnlagenNummer",
+          "Artikel",
+          "Ebene",
+          "Gruppe"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeraetArtikel": {
+        "type": "object",
+        "properties": {
+          "GeraeteId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "GeraeteId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeraetEbene": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "AnlagenNummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "Bezeichnung": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Id"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeraetGruppe": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "EbeneId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "AnlagenNummer": {
+            "type": "string"
+          },
+          "Bezeichnung": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Id",
+          "AnlagenNummer"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeraetMaske": {
+        "type": "object",
+        "properties": {
+          "GeraeteMaskenId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Artikel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoGeraetMaskenArtikel"
+            }
+          },
+          "Gruppe": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "GeraeteMaskenId",
+          "Artikel"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGeraetMaskenArtikel": {
+        "type": "object",
+        "properties": {
+          "GeraeteMaskenId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "GeraeteMaskenId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGrunddaten": {
+        "type": "object",
+        "properties": {
+          "GrdNummer": {
+            "type": "string"
+          },
+          "GrdInhalt": {
+            "type": "string"
+          },
+          "Beschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzer": {
+            "type": "string",
+            "nullable": true
+          },
+          "Mandant": {
+            "type": "string",
+            "nullable": true
+          },
+          "Typ": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "Allgemein",
+              "MandantBezogen",
+              "BenutzerBezogen"
+            ],
+            "nullable": true
+          },
+          "Zeitstempel": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "GrdNummer",
+          "GrdInhalt",
+          "Id"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGruppenanlage": {
+        "type": "object",
+        "properties": {
+          "KeyRahmenanlage": {
+            "type": "string"
+          },
+          "Bilder": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoGruppenanlagenBild"
+            }
+          }
+        },
+        "required": [
+          "KeyRahmenanlage",
+          "Bilder"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoGruppenanlagenBild": {
+        "type": "object",
+        "properties": {}
+      },
+      "DtoIntervall": {
+        "type": "object",
+        "properties": {
+          "Auswahl": {
+            "type": "boolean"
+          },
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "AnlagenNummer": {
+            "type": "string"
+          },
+          "Infotext": {
+            "type": "string",
+            "nullable": true
+          },
+          "MonatKw": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "WartungsJahr": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Interval": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IntervallArt": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "NichtDefiniert",
+              "Monat",
+              "Kw"
+            ],
+            "nullable": true
+          },
+          "Selekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "EbeneId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "GruppeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Benutzerfeld1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld3": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld4": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld5": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld6": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld7": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld8": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld9": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld10": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld11": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld12": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld13": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld14": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld15": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld16": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld17": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld18": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld19": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld20": {
+            "type": "string",
+            "nullable": true
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kategorie": {
+            "type": "string",
+            "nullable": true
+          },
+          "MontStrgTermine": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Termin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoTermin"
+              }
+            ],
+            "nullable": true
+          },
+          "Blockartikel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoBlockartikel"
+            }
+          },
+          "IntervalleGeraete": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervalleGeraete"
+            }
+          },
+          "IntervalleInfotexte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervallInfotext"
+            }
+          },
+          "IntervalleVertragsPostionen": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervallVertragsposition"
+            }
+          },
+          "Ebene": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoGeraetEbene"
+              }
+            ],
+            "nullable": true
+          },
+          "Gruppe": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoGeraetGruppe"
+              }
+            ],
+            "nullable": true
+          },
+          "LinkId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "HauptMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "Planstunden": {
+            "type": "number",
+            "format": "double"
+          },
+          "Qualifikation": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachunternehmerAdrKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerLeistungstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerKonditionstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "NaechsteWartungFaelligAm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "InfoFuerMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "Detailbeschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "WartungAnlage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAnlageIntervall"
+              }
+            ],
+            "nullable": true
+          },
+          "TerminVon": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Auswahl",
+          "AnlagenNummer",
+          "ErfasstDatum",
+          "Blockartikel",
+          "IntervalleGeraete",
+          "IntervalleInfotexte",
+          "IntervalleVertragsPostionen",
+          "Planstunden"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoIntervallDruck": {
+        "type": "object",
+        "properties": {
+          "AnlagenBezeichnung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenBemerkung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenOrt": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseAnlageKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseAnlageAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "AnlagenAdresseAnlage": {
+            "$ref": "#/components/schemas/DtoAdresse"
+          },
+          "AnlagenAdresseStrasse": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdressePlz": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseOrt": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseRechnungKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseRechnungAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "AnlagenAdresseHausmeisterKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseHausverwalterKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseEigentuemerKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "EigentuemerAdresseStrasse": {
+            "type": "string",
+            "nullable": true
+          },
+          "EigentuemerAdressePlz": {
+            "type": "string",
+            "nullable": true
+          },
+          "EigentuemerAdresseOrt": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdresseMieterKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAdressePaechterKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenSelekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenBrennstoffart": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAbteilung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenAbteilungsnummer": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "AnlagenNummer": {
+            "type": "string"
+          },
+          "Infotext": {
+            "type": "string",
+            "nullable": true
+          },
+          "MonatKw": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "WartungsJahr": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Intervall": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IntervallArt": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "NichtDefiniert",
+              "Monat",
+              "Kw"
+            ],
+            "nullable": true
+          },
+          "Selekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kategorie": {
+            "type": "string",
+            "nullable": true
+          },
+          "MontStrgTermine": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Termin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoTermin"
+              }
+            ],
+            "nullable": true
+          },
+          "HauptMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "Planstunden": {
+            "type": "number",
+            "format": "double"
+          },
+          "Qualifikation": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachunternehmerAdrKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "NaechsteWartungFaelligAm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "WartungAnlage": {
+            "$ref": "#/components/schemas/DtoAnlageIntervall"
+          },
+          "TerminStart": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "NachUnternehmerLeistungstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerKonditionstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "InfoFuerMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld3": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld4": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld5": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld6": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld7": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld8": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld9": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld10": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld11": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld12": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld13": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld14": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld15": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld16": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld17": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld18": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld19": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld20": {
+            "type": "string",
+            "nullable": true
+          },
+          "LinkId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Detailbeschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AktiverVertragVorhanden": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "GruppenanlageNummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "ZuProjNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Verknuepfte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervallDruck"
+            }
+          },
+          "IntervalleVertragsPostionen": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervallVertragsposition"
+            }
+          },
+          "IntervalleInfotexte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervallInfotext"
+            }
+          }
+        },
+        "required": [
+          "AnlagenAdresseAnlage",
+          "AnlagenNummer",
+          "Planstunden",
+          "WartungAnlage",
+          "Verknuepfte",
+          "IntervalleVertragsPostionen",
+          "IntervalleInfotexte"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoIntervallInfotext": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IntervallId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TextKey": {
+            "type": "string"
+          },
+          "Bezeichnung": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "IntervallId",
+          "TextKey"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoIntervallVertragsposition": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IntervallId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "VertragsId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "VertragNummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "Poskey": {
+            "type": "string"
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "Schluessel": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kurztext1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kurztext2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Menge": {
+            "type": "number",
+            "format": "double"
+          },
+          "Mengeneinheit": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kostenart": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "EP": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "required": [
+          "IntervallId",
+          "VertragsId",
+          "Poskey",
+          "ErfasstDatum",
+          "Menge"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoIntervalleGeraete": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "IntervallId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "GeraeteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Geraet": {
+            "$ref": "#/components/schemas/DtoGeraet"
+          }
+        },
+        "required": [
+          "Id",
+          "IntervallId",
+          "GeraeteId",
+          "Geraet"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoKontakt": {
+        "type": "object",
+        "properties": {
+          "KontaktId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Kontaktart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "x-kwp-enum-names": [
+              "Telefon",
+              "Fax",
+              "EMail",
+              "Internet",
+              "Mobil",
+              "Bemerkung"
+            ],
+            "nullable": true
+          },
+          "Kontakt": {
+            "type": "string",
+            "nullable": true
+          },
+          "KontaktName": {
+            "type": "string",
+            "nullable": true
+          },
+          "Bemerkung": {
+            "type": "string",
+            "nullable": true
+          },
+          "KontaktartTyp": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "OhneZuordnung",
+              "Privat",
+              "Geschaeftlich"
+            ],
+            "nullable": true
+          },
+          "AnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "required": [
+          "KontaktId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoLogbuch": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "AnlagenNummer": {
+            "type": "string"
+          },
+          "Anlagenart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          },
+          "Datum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LogbuchArtId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Benutzer": {
+            "type": "string",
+            "nullable": true
+          },
+          "Herkunft": {
+            "type": "string",
+            "nullable": true
+          },
+          "HerkunftId": {
+            "type": "string",
+            "nullable": true
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "IntervallId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Id",
+          "AnlagenNummer",
+          "Anlagenart",
+          "LogbuchArtId",
+          "ErfasstDatum"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoLogbuchArt": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Art": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Art"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoMessdaten": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "AnlagenNummer": {
+            "type": "string"
+          },
+          "Datum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Art": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzer": {
+            "type": "string",
+            "nullable": true
+          },
+          "Beschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Herkunft": {
+            "type": "string",
+            "nullable": true
+          },
+          "HerkunftId": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp01": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert01": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp02": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert02": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp03": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert03": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp04": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert04": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp05": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert05": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp06": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert06": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp07": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert07": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp08": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert08": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp09": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert09": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp10": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert10": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp11": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert11": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp12": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert12": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp13": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert13": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp14": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert14": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp15": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert15": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp16": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert16": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp17": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert17": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp18": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert18": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp19": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert19": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp20": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert20": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp21": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert21": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp22": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert22": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp23": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert23": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp24": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert24": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp25": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert25": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp26": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert26": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp27": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert27": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp28": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert28": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp29": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert29": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp30": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert30": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp31": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert31": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp32": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert32": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp33": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert33": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp34": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert34": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp35": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert35": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp36": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert36": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp37": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert37": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp38": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert38": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp39": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert39": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp40": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert40": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp41": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert41": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp42": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert42": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp43": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert43": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp44": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert44": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp45": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert45": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp46": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert46": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp47": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert47": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp48": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert48": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp49": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert49": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp50": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messwert50": {
+            "type": "string",
+            "nullable": true
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Id",
+          "AnlagenNummer",
+          "ErfasstDatum"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoMessdatenArt": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Art": {
+            "type": "string"
+          },
+          "MesswertTyp01": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp02": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp03": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp04": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp05": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp06": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp07": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp08": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp09": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp10": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp11": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp12": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp13": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp14": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp15": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp16": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp17": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp18": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp19": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp20": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp21": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp22": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp23": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp24": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp25": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp26": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp27": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp28": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp29": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp30": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp31": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp32": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp33": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp34": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp35": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp36": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp37": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp38": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp39": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp40": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp41": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp42": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp43": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp44": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp45": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp46": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp47": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp48": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp49": {
+            "type": "string",
+            "nullable": true
+          },
+          "MesswertTyp50": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Art"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoMontageauftrag": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Auftragsnr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Vorgangsnr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Vorgangsart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "x-kwp-enum-names": [
+              "Regie",
+              "Projekt",
+              "Wartungsauftrag",
+              "MobilerMonteur",
+              "Sonstiges"
+            ]
+          },
+          "WartungsanlagenNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlagenArt": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          },
+          "Betreff": {
+            "type": "string",
+            "nullable": true
+          },
+          "Bemerkung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AuftraggeberAdresse": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresse"
+              }
+            ],
+            "nullable": true
+          },
+          "AuftrGeber": {
+            "type": "string",
+            "nullable": true
+          },
+          "RegieZuProjekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "TerminVon": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "TerminBis": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Status": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "x-kwp-enum-names": [
+              "Erzeugt",
+              "Wartend",
+              "Freigegeben",
+              "AnMonteurAusgegeben",
+              "AnMobMonteurAusgegeben",
+              "Rueckgemeldet",
+              "ZurAbrechnung",
+              "ErledigtStorniert"
+            ]
+          },
+          "Abteilungsnummer": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "KategorieId": {
+            "type": "string",
+            "nullable": true
+          },
+          "Art": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "x-kwp-enum-names": [
+              "Montageauftrag",
+              "Zeitmeldung",
+              "Tagesberichte",
+              "Aufmass",
+              "Zeiterfassung"
+            ]
+          },
+          "Planstunden": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "Qualifikation": {
+            "type": "string",
+            "nullable": true
+          },
+          "RechnungAdressKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "LieferAdressKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "TerminId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "LieferAdressAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "RechnungAdressAnsprechpartnerId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "NachunternehmerAdrKuerzel": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerLeistungstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "NachUnternehmerKonditionstext": {
+            "type": "string",
+            "nullable": true
+          },
+          "Anlagenart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          },
+          "Hauptmonteur": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Druckumfang": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "Keine",
+              "Alle",
+              "VonBis"
+            ]
+          },
+          "DruckumfangPosKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "EbeneId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IntervalleInfotexte": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoIntervallInfotext"
+            }
+          },
+          "InfoFuerMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "ExtAuftragsNummer": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Vorgangsart",
+          "AnlagenArt",
+          "Status",
+          "Art",
+          "Anlagenart",
+          "Druckumfang",
+          "DruckumfangPosKeys",
+          "IntervalleInfotexte"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoMontageauftragDruckInfos": {
+        "type": "object",
+        "properties": {
+          "AnlageBemerkung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBezeichnung": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageAnlagenOrt": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBrennstoffart": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageSelekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld1": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld2": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld3": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld4": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld5": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld6": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld7": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld8": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld9": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld10": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld11": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld12": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld13": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld14": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld15": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld16": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld17": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld18": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld19": {
+            "type": "string",
+            "nullable": true
+          },
+          "AnlageBenutzerfeld20": {
+            "type": "string",
+            "nullable": true
+          },
+          "MonteurInklPersNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "NaechsterTermin": {
+            "type": "string",
+            "nullable": true
+          },
+          "NameMonteur": {
+            "type": "string",
+            "nullable": true
+          },
+          "Sachbearbeiter": {
+            "type": "string",
+            "nullable": true
+          },
+          "Abteilung": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAbteilung"
+              }
+            ],
+            "nullable": true
+          },
+          "MontStrgTermin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoTermin"
+              }
+            ],
+            "nullable": true
+          },
+          "AdresseAnlage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "AdresseEigentuemer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "AdresseHausmeister": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "AdresseHausverwalter": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "AdresseMieter": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "AdressePaechter": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "AdresseRechnung": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresseKomplett"
+              }
+            ],
+            "nullable": true
+          },
+          "Positionen": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoMontageauftragPosition"
+            }
+          },
+          "Geraete": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoGeraet"
+            }
+          },
+          "Vertraege": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoVertrag"
+            }
+          },
+          "IntervallSelekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "MessdatenKomplett": {
+            "type": "string",
+            "nullable": true
+          },
+          "Messdaten": {
+            "type": "string",
+            "nullable": true
+          },
+          "AuftragHistorie": {
+            "type": "string",
+            "nullable": true
+          },
+          "Detailbeschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Info1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Info2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Info3": {
+            "type": "string",
+            "nullable": true
+          },
+          "AuftraggeberDruck": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Positionen",
+          "Geraete",
+          "Vertraege"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoMontageauftragPosition": {
+        "type": "object",
+        "properties": {
+          "PosKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "Titel": {
+            "type": "string",
+            "nullable": true
+          },
+          "Menge": {
+            "type": "number",
+            "format": "double"
+          },
+          "Einheit": {
+            "type": "string",
+            "nullable": true
+          },
+          "MaterialanteilNetto": {
+            "type": "number",
+            "format": "double"
+          },
+          "Materialanteil": {
+            "type": "number",
+            "format": "double"
+          },
+          "PreisEinheit": {
+            "type": "number",
+            "format": "double"
+          },
+          "Einzelpreis": {
+            "type": "number",
+            "format": "double"
+          },
+          "Verkaufspreis1": {
+            "type": "number",
+            "format": "double"
+          },
+          "Verkaufspreis2": {
+            "type": "number",
+            "format": "double"
+          },
+          "Verkaufspreis3": {
+            "type": "number",
+            "format": "double"
+          },
+          "ArtNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kurztext1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Kurztext2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Positionsart": {
+            "type": "string",
+            "nullable": true
+          },
+          "Langtext": {
+            "type": "string",
+            "nullable": true
+          },
+          "LangtextRtf": {
+            "type": "string",
+            "nullable": true
+          },
+          "PosNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "PosUnr": {
+            "type": "string",
+            "nullable": true
+          },
+          "PosArbeitszeit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "PosInfotext": {
+            "type": "string",
+            "nullable": true
+          },
+          "Seriennummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "WertMaterial": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "WertLohn": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "Kostenart": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "VertragId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Menge",
+          "MaterialanteilNetto",
+          "Materialanteil",
+          "PreisEinheit",
+          "Einzelpreis",
+          "Verkaufspreis1",
+          "Verkaufspreis2",
+          "Verkaufspreis3"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoOrt": {
+        "type": "object",
+        "properties": {
+          "OrtId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Land": {
+            "type": "string",
+            "nullable": true
+          },
+          "Plz": {
+            "type": "string",
+            "nullable": true
+          },
+          "Ort": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "OrtId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoRahmenanlage": {
+        "type": "object",
+        "properties": {}
+      },
+      "DtoRegieStatus": {
+        "type": "object",
+        "properties": {
+          "Unterstatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoRegieStatus"
+            }
+          }
+        },
+        "required": [
+          "Unterstatus"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoSetup": {
+        "type": "object",
+        "properties": {
+          "Einstellungen": {
+            "type": "string"
+          },
+          "Abteilungen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Brennstoffarten": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Selekts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "LogbuchArten": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoLogbuchArt"
+            }
+          },
+          "MessdatenArten": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoMessdatenArt"
+            }
+          },
+          "Faelligkeiten": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "Monteure": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "IntervallSelekts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "VertragSelekts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Status": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoRegieStatus"
+            }
+          }
+        },
+        "required": [
+          "Einstellungen",
+          "Abteilungen",
+          "Brennstoffarten",
+          "Selekts",
+          "LogbuchArten",
+          "MessdatenArten",
+          "Faelligkeiten",
+          "Monteure",
+          "IntervallSelekts",
+          "VertragSelekts",
+          "Status"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoSoftwarepflegeAuftraegeErzeugenFilter": {
+        "type": "object",
+        "properties": {
+          "AnlagenBrennstoffart": {
+            "type": "string",
+            "nullable": true
+          },
+          "VertagMindestensBis": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Stichtag": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "Stichtag"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoTermin": {
+        "type": "object",
+        "properties": {
+          "Vorgangsnr": {
+            "type": "string",
+            "nullable": true
+          },
+          "Beschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "WartTerminNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "MontStrgPers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DtoTerminTeilnehmer"
+            }
+          },
+          "Adresse": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DtoAdresse"
+              }
+            ],
+            "nullable": true
+          },
+          "TypId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "StatusId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Privat": {
+            "type": "boolean"
+          },
+          "Serientermin": {
+            "type": "boolean"
+          },
+          "AktivitaetenId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ErinnerungAm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Erinnerung": {
+            "type": "boolean"
+          },
+          "PublishGuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "Weiterverarbeitet": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Anlagenart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "x-kwp-enum-names": [
+              "Rahmen",
+              "Gruppe",
+              "Anlage",
+              "Keine"
+            ]
+          },
+          "TerminArt": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "Normal",
+              "Fix",
+              "Terminaktivitaet"
+            ],
+            "nullable": true
+          },
+          "Createuser": {
+            "type": "string",
+            "nullable": true
+          },
+          "Herkunftsart": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1
+            ],
+            "x-kwp-enum-names": [
+              "Manuell",
+              "AutomatischeDrucke"
+            ]
+          },
+          "HerkunftId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "MontStrgPers",
+          "TypId",
+          "StatusId",
+          "Privat",
+          "Serientermin",
+          "Erinnerung",
+          "Anlagenart",
+          "Herkunftsart",
+          "HerkunftId"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoTerminSetup": {
+        "type": "object",
+        "properties": {
+          "TerminStatus": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "TerminTypen": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "TerminStatus",
+          "TerminTypen"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoTerminTeilnehmer": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TerminId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PersNr": {
+            "type": "string"
+          },
+          "PersArt": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "x-kwp-enum-names": [
+              "Benutzer",
+              "PersonalNummer",
+              "Geraet"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "Id",
+          "TerminId",
+          "PersNr"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoVertrag": {
+        "type": "object",
+        "properties": {
+          "Beschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Text": {
+            "type": "string",
+            "nullable": true
+          },
+          "Datum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Betrag": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "BetragZuvor": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "LetztePreisAenderung": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "NaechstePreisErhoehung": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "IntervalErhoehung": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ErhoehungsArt": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Erhoehung": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "KalkStunden": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "Rechnungsmonat": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "RechnungszyklusInMonaten": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Selekt": {
+            "type": "string",
+            "nullable": true
+          },
+          "RechTextNr": {
+            "type": "string",
+            "nullable": true
+          },
+          "LetzteRechnung": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "AbteilungsNr": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Kondition": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "KuendigungsGrund": {
+            "type": "string",
+            "nullable": true
+          },
+          "LetzterLeistungsMonat": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "Benutzerfeld1": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld2": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld3": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld4": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld5": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld6": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld7": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld8": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld9": {
+            "type": "string",
+            "nullable": true
+          },
+          "Benutzerfeld10": {
+            "type": "string",
+            "nullable": true
+          },
+          "AbweichendeRechnungsAdresse": {
+            "type": "string",
+            "nullable": true
+          },
+          "AutomatischeErhoehungAktiv": {
+            "type": "boolean"
+          },
+          "ErfasstDatum": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ErfasstUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "GeaendertDatum": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "GeaendertUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "AbrechnungNachErbrachterLeistung": {
+            "type": "boolean"
+          },
+          "Auftragsnummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "ExterneAuftragsnummer": {
+            "type": "string",
+            "nullable": true
+          },
+          "HerkunftInfos": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "AbteilungsNr",
+          "AutomatischeErhoehungAktiv",
+          "ErfasstDatum",
+          "AbrechnungNachErbrachterLeistung"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "DtoWartungAntrittPrioritaet": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Beschreibung": {
+            "type": "string",
+            "nullable": true
+          },
+          "Farbe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Id"
+        ],
+        "x-kwp-required-source": "inferred-from-nullability"
+      },
+      "GrunddatenTyp": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "Allgemein",
+          "MandantBezogen",
+          "BenutzerBezogen"
+        ]
+      },
+      "Herkunft": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "Manuell",
+          "Intervall",
+          "Vertrag"
+        ]
+      },
+      "HerkunftArt": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1
+        ],
+        "x-kwp-enum-names": [
+          "Manuell",
+          "AutomatischeDrucke"
+        ]
+      },
+      "IntervallArt": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "NichtDefiniert",
+          "Monat",
+          "Kw"
+        ]
+      },
+      "Kontaktart": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "x-kwp-enum-names": [
+          "Telefon",
+          "Fax",
+          "EMail",
+          "Internet",
+          "Mobil",
+          "Bemerkung"
+        ]
+      },
+      "KontaktartTyp": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "OhneZuordnung",
+          "Privat",
+          "Geschaeftlich"
+        ]
+      },
+      "Persart": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "Benutzer",
+          "PersonalNummer",
+          "Geraet"
+        ]
+      },
+      "RegiePreiskennzeichen": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "x-kwp-enum-names": [
+          "AllgeimeineKalkulationsDaten",
+          "VkPreis1",
+          "VkPreis2",
+          "VkPreis3",
+          "Bruttopreis",
+          "AdressbezogeneKalkulationsDaten"
+        ]
+      },
+      "Sperrvermerk": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "Neutral",
+          "Warnung",
+          "Gesperrt"
+        ]
+      },
+      "Status": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "x-kwp-enum-names": [
+          "Erzeugt",
+          "Wartend",
+          "Freigegeben",
+          "AnMonteurAusgegeben",
+          "AnMobMonteurAusgegeben",
+          "Rueckgemeldet",
+          "ZurAbrechnung",
+          "ErledigtStorniert"
+        ]
+      },
+      "TerminArt": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "x-kwp-enum-names": [
+          "Normal",
+          "Fix",
+          "Terminaktivitaet"
+        ]
+      },
+      "Vorgangsart": {
+        "type": "integer",
+        "format": "int32",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "x-kwp-enum-names": [
+          "Regie",
+          "Projekt",
+          "Wartungsauftrag",
+          "MobilerMonteur",
+          "Sonstiges"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/adresse/GetGeoLocation": {
+      "post": {
+        "summary": "adresse.GetGeoLocation",
+        "tags": [
+          "adresse"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "strasse",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoGeoLocation"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoOrt"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/core/GetSetup": {
+      "get": {
+        "summary": "core.GetSetup",
+        "tags": [
+          "core"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "lookup",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "enum": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "x-kwp-enum-names": [
+                  "Anlagen",
+                  "Gruppen",
+                  "Rahmen",
+                  "Geraete",
+                  "Termine",
+                  "Vertraege",
+                  "Vertragspositionen",
+                  "Auftraege",
+                  "Auftragspositionen"
+                ]
+              }
+            }
+          },
+          {
+            "name": "recht",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoCoreSetup"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grunddaten/Load": {
+      "get": {
+        "summary": "grunddaten.Load",
+        "tags": [
+          "grunddaten"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "grdNummer",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoGrunddaten"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grunddaten/Save": {
+      "post": {
+        "summary": "grunddaten.Save",
+        "tags": [
+          "grunddaten"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoGrunddaten"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/termin/DeleteTermin": {
+      "post": {
+        "summary": "termin.DeleteTermin",
+        "tags": [
+          "termin"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "terminId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/termin/GetSetup": {
+      "get": {
+        "summary": "termin.GetSetup",
+        "tags": [
+          "termin"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoTerminSetup"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/termin/LoadLastWartungAuftragTerminIntervall": {
+      "get": {
+        "summary": "termin.LoadLastWartungAuftragTerminIntervall",
+        "tags": [
+          "termin"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoTermin"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/termin/SaveTermin": {
+      "post": {
+        "summary": "termin.SaveTermin",
+        "tags": [
+          "termin"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoTermin"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/AddAntrittPrioritaet": {
+      "post": {
+        "summary": "wartung.AddAntrittPrioritaet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoWartungAntrittPrioritaet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/ChangeAdresszuordnung": {
+      "post": {
+        "summary": "wartung.ChangeAdresszuordnung",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "adresszuordnungId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DtoAdresszuordnungChangeAction"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/CountCreatableSoftwarePflegeWartungsauftraege": {
+      "post": {
+        "summary": "wartung.CountCreatableSoftwarePflegeWartungsauftraege",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoSoftwarepflegeAuftraegeErzeugenFilter"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/CreateSammelauftrag": {
+      "post": {
+        "summary": "wartung.CreateSammelauftrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoAuftrag"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteAdresszuordnungArt": {
+      "post": {
+        "summary": "wartung.DeleteAdresszuordnungArt",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteAnlage": {
+      "post": {
+        "summary": "wartung.DeleteAnlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteAntrittPrioritaet": {
+      "delete": {
+        "summary": "wartung.DeleteAntrittPrioritaet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "antrittPrioritaetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteAuftrag": {
+      "post": {
+        "summary": "wartung.DeleteAuftrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "auftragNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteBlockartikel": {
+      "post": {
+        "summary": "wartung.DeleteBlockartikel",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteGeraet": {
+      "post": {
+        "summary": "wartung.DeleteGeraet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteGeraetArtikel": {
+      "post": {
+        "summary": "wartung.DeleteGeraetArtikel",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteGeraeteMaske": {
+      "post": {
+        "summary": "wartung.DeleteGeraeteMaske",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteGeraeteMaskenArtikel": {
+      "post": {
+        "summary": "wartung.DeleteGeraeteMaskenArtikel",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteGruppenanlage": {
+      "post": {
+        "summary": "wartung.DeleteGruppenanlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteInfotext": {
+      "post": {
+        "summary": "wartung.DeleteInfotext",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteIntervall": {
+      "post": {
+        "summary": "wartung.DeleteIntervall",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteIntervallForGeraet": {
+      "post": {
+        "summary": "wartung.DeleteIntervallForGeraet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "intervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "geraeteId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteIntervallGeraet": {
+      "post": {
+        "summary": "wartung.DeleteIntervallGeraet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteMessdaten": {
+      "post": {
+        "summary": "wartung.DeleteMessdaten",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteMessdatenArt": {
+      "post": {
+        "summary": "wartung.DeleteMessdatenArt",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteRahmenanlage": {
+      "post": {
+        "summary": "wartung.DeleteRahmenanlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteTerminverknuepfungForIntervall": {
+      "post": {
+        "summary": "wartung.DeleteTerminverknuepfungForIntervall",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "intervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/DeleteVertrag": {
+      "post": {
+        "summary": "wartung.DeleteVertrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "vertragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/GetSetup": {
+      "get": {
+        "summary": "wartung.GetSetup",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoSetup"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadAnlage": {
+      "get": {
+        "summary": "wartung.LoadAnlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoAnlage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadAuftragNrByVertragId": {
+      "get": {
+        "summary": "wartung.LoadAuftragNrByVertragId",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "vertragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadGruppenanlage": {
+      "get": {
+        "summary": "wartung.LoadGruppenanlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoGruppenanlage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadIntervall": {
+      "get": {
+        "summary": "wartung.LoadIntervall",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "intervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoIntervallDruck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadMontageauftrag": {
+      "get": {
+        "summary": "wartung.LoadMontageauftrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "montageauftragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoMontageauftrag"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadMontageauftragDruckInfosById": {
+      "get": {
+        "summary": "wartung.LoadMontageauftragDruckInfosById",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "montageauftragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "anlagenart",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "x-kwp-enum-names": [
+                "Rahmen",
+                "Gruppe",
+                "Anlage",
+                "Keine"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoMontageauftragDruckInfos"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadMontageauftragDruckInfosByWartauftragsnummer": {
+      "get": {
+        "summary": "wartung.LoadMontageauftragDruckInfosByWartauftragsnummer",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "wartungsauftragsnummer",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "anlagenart",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "x-kwp-enum-names": [
+                "Rahmen",
+                "Gruppe",
+                "Anlage",
+                "Keine"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoMontageauftragDruckInfos"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadRahmenanlage": {
+      "get": {
+        "summary": "wartung.LoadRahmenanlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoRahmenanlage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadTerminById": {
+      "get": {
+        "summary": "wartung.LoadTerminById",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "terminId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoTermin"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadVertragByAuftragNr": {
+      "get": {
+        "summary": "wartung.LoadVertragByAuftragNr",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "auftragNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoVertrag"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadVertragById": {
+      "get": {
+        "summary": "wartung.LoadVertragById",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "vertragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DtoVertrag"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LoadVertragNrByVertragId": {
+      "get": {
+        "summary": "wartung.LoadVertragNrByVertragId",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "vertragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/LockAnlage": {
+      "post": {
+        "summary": "wartung.LockAnlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/MergeAnlageProjekt": {
+      "post": {
+        "summary": "wartung.MergeAnlageProjekt",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projektNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/MergeIntervalle": {
+      "post": {
+        "summary": "wartung.MergeIntervalle",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "primaryIntervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "secondaryIntervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveAdressBenutzerZuordnung": {
+      "post": {
+        "summary": "wartung.SaveAdressBenutzerZuordnung",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoAdresszuordnung"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveAdresszuordnungArten": {
+      "post": {
+        "summary": "wartung.SaveAdresszuordnungArten",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DtoAdresszuordnungArt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveAnlagenAbteilung": {
+      "post": {
+        "summary": "wartung.SaveAnlagenAbteilung",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "abteilungsnummer",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DtoAnlageInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveAnlagenMonteur": {
+      "post": {
+        "summary": "wartung.SaveAnlagenMonteur",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "monteur",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DtoAnlageInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveAntrittPrioritaet": {
+      "post": {
+        "summary": "wartung.SaveAntrittPrioritaet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoWartungAntrittPrioritaet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveAuftrag": {
+      "post": {
+        "summary": "wartung.SaveAuftrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoAuftrag"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveBlockartikel": {
+      "post": {
+        "summary": "wartung.SaveBlockartikel",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoBlockartikel"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveEinstellungen": {
+      "post": {
+        "summary": "wartung.SaveEinstellungen",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveGeraet": {
+      "post": {
+        "summary": "wartung.SaveGeraet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoGeraet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveGeraetArtikel": {
+      "post": {
+        "summary": "wartung.SaveGeraetArtikel",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoGeraetArtikel"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveGeraeteMaske": {
+      "post": {
+        "summary": "wartung.SaveGeraeteMaske",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoGeraetMaske"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveGeraeteMaskenArtikel": {
+      "post": {
+        "summary": "wartung.SaveGeraeteMaskenArtikel",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoGeraetMaskenArtikel"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveInfotext": {
+      "post": {
+        "summary": "wartung.SaveInfotext",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoIntervallInfotext"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveIntervall": {
+      "post": {
+        "summary": "wartung.SaveIntervall",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoIntervall"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveIntervallErhoehung": {
+      "post": {
+        "summary": "wartung.SaveIntervallErhoehung",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoIntervallDruck"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveIntervallGeraet": {
+      "post": {
+        "summary": "wartung.SaveIntervallGeraet",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "intervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "geraeteId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveLogbucheintrag": {
+      "post": {
+        "summary": "wartung.SaveLogbucheintrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoLogbuch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveMessdaten": {
+      "post": {
+        "summary": "wartung.SaveMessdaten",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoMessdaten"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveMessdatenArten": {
+      "post": {
+        "summary": "wartung.SaveMessdatenArten",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DtoMessdatenArt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveMontageauftrag": {
+      "post": {
+        "summary": "wartung.SaveMontageauftrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoMontageauftrag"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveTerminIdForIntervallId": {
+      "get": {
+        "summary": "wartung.SaveTerminIdForIntervallId",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "intervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "terminId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveVertrag": {
+      "post": {
+        "summary": "wartung.SaveVertrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DtoVertrag"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveVertragBetrag": {
+      "post": {
+        "summary": "wartung.SaveVertragBetrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "vertragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "betrag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SaveVertragerhoehungBetrag": {
+      "post": {
+        "summary": "wartung.SaveVertragerhoehungBetrag",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "vertragId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "betrag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SeparateAnlageProjekt": {
+      "post": {
+        "summary": "wartung.SeparateAnlageProjekt",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projektNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/SeparateIntervalle": {
+      "post": {
+        "summary": "wartung.SeparateIntervalle",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "intervallId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wartung/UnLockAnlage": {
+      "post": {
+        "summary": "wartung.UnLockAnlage",
+        "tags": [
+          "wartung"
+        ],
+        "parameters": [
+          {
+            "name": "mandant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Mandant (optional)"
+          },
+          {
+            "name": "anlagenNr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "forceUnlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connect/token": {
+      "post": {
+        "summary": "Token (password grant)",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client_id": {
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "type": "string"
+                  },
+                  "grant_type": {
+                    "type": "string",
+                    "example": "password"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "scope": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "client_id",
+                  "client_secret",
+                  "grant_type",
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "access_token",
+                    "token_type"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    }
+  }
+}

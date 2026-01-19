@@ -10,12 +10,18 @@
     "test": "node test-env.js",
     "inspect:mssql": "node inspect-mssql.js",
     "inspect:schema": "node inspect-mssql-schema.js",
-    "test:project": "node test-project.js"
+    "test:project": "node test-project.js",
+    "capture:cli": "node reverse-engineer/cli.js",
+    "capture:ui": "electron reverse-engineer/ui/main.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.44.4",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "mssql": "^10.0.0"
+    "mssql": "^10.0.0",
+    "swagger-ui-dist": "^5.17.14"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0"
   }
 }

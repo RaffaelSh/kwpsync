@@ -40,6 +40,12 @@
   - `POST /sync/pull`
   - `POST /sync/push`
 
+## Swagger UI (lokal)
+Die OpenAPI-Doku liegt als `openapi.json` im Repo. Starte den Server und öffne:
+```
+http://localhost:4000/docs
+```
+
 ## Realtime (CRM → KWP, ohne eingehenden Port)
 Wir nutzen eine Queue-Tabelle in Supabase. CRM schreibt dort nur ein JSON-Payload hinein.
 
