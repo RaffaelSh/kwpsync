@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
+    "docs": "node docs-server.js",
     "realtime": "node realtime-sync.js",
     "test": "node test-env.js",
     "inspect:mssql": "node inspect-mssql.js",

@@ -46,6 +46,12 @@ Die OpenAPI-Doku liegt als `openapi.json` im Repo. Starte den Server und öffne:
 http://localhost:4000/docs
 ```
 
+## Swagger UI (separat, ohne API-Server)
+```
+npm run docs
+```
+Dann: `http://localhost:4010/docs`
+
 ## Realtime (CRM → KWP, ohne eingehenden Port)
 Wir nutzen eine Queue-Tabelle in Supabase. CRM schreibt dort nur ein JSON-Payload hinein.
 
